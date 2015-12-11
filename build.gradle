@@ -10,9 +10,11 @@ compileJava {
     source jaxb.outputs.files
 }
 
-idea {
-    module {
-        sourceDirs += file('build/generated-src/')
+sourceSets {
+    main {
+        java {
+            srcDirs += [file('build/generated-src/')]
+        }
     }
 }
 
