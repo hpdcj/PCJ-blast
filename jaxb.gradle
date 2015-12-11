@@ -1,0 +1,33 @@
+configurations {
+    jaxb
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    jaxb 'com.sun.xml.bind:jaxb-core:2.2.11'
+    jaxb 'com.sun.xml.bind:jaxb-xjc:2.2.11'
+    jaxb 'com.sun.xml.bind:jaxb-impl:2.2.11'
+}
+
+task jaxb {
+    def outputDir = file("${buildDir}/generated-src/")
+    outputs.dir outputDir
+ 
+    // perform actions
+    doLast {
+        outputDir .exists() || outputDir .mkdirs()
+        
+        ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
+        ant.outputDir=outputDir
+
+        ant.xjc(
+            destdir: '${outputDir}',
+            package: 'ncbi.blast.result.generated',
+            language : 'DTD',
+            schema: 'src/main/resources/dtd/NCBI_BlastOutput.dtd'
+        )
+    }
+}
