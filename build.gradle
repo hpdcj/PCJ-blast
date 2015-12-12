@@ -1,10 +1,14 @@
 apply plugin: 'java'
-apply plugin: 'idea'
 apply from: 'jaxb.gradle'
 
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
+jaxb {    
+    inputs.file "src/main/resources/dtd/NCBI_BlastOutput.dtd!ncbi.blast.result.generated"
+    outputs.dir "${buildDir}/generated-src/"
+}
+    
 compileJava {
     dependsOn jaxb
     source jaxb.outputs.files

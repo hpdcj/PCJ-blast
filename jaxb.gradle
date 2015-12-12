@@ -13,21 +13,47 @@ dependencies {
 }
 
 task jaxb {
-    def outputDir = file("${buildDir}/generated-src/")
-    outputs.dir outputDir
- 
-    // perform actions
     doLast {
-        outputDir .exists() || outputDir .mkdirs()
+        def outputDir = outputs.files.find { file ->  !file.isFile() }
+        outputDir.exists() || outputDir.mkdirs()
         
         ant.taskdef(name: 'xjc', classname: 'com.sun.tools.xjc.XJCTask', classpath: configurations.jaxb.asPath)
         ant.outputDir=outputDir
 
-        ant.xjc(
-            destdir: '${outputDir}',
-            package: 'ncbi.blast.result.generated',
-            language : 'DTD',
-            schema: 'src/main/resources/dtd/NCBI_BlastOutput.dtd'
-        )
+        inputs.files.each { input ->
+            def fileName
+            def packageName
+            def language
+            
+            def inputStr = input.toString()
+            def index = inputStr.indexOf("!")
+            if (index==-1) {
+                fileName = inputStr
+                packageName = "jaxb.generated"
+            } else {
+                fileName = inputStr.substring(0, index)
+                packageName = inputStr.substring(index+1)
+            }
+            switch (fileName.substring(fileName.lastIndexOf(".")+1).toLowerCase()) {
+                case "dtd":
+                    language = "DTD"
+                    break
+                case "xsd":
+                    language = "XMLSCHEMA"
+                    break
+                //RELAXNG,
+                //RELAXNG_COMPACT,
+                case "wsdl":
+                    language = "WSDL"
+                    break
+                default: language = "XMLSCHEMA"
+            }
+            ant.xjc(
+                schema: fileName,
+                language : language,
+                package: packageName,
+                destdir: '${outputDir}',
+            )
+        }
     }
 }
