@@ -39,7 +39,7 @@ public class CsvFileWriter implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        output.close();
+    public void close() {
+        output.flush();
     }
 }
