@@ -5,7 +5,8 @@
  */
 package org.pcj.biojava;
 
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
  *
@@ -13,11 +14,11 @@ import java.io.PrintWriter;
  */
 public class CsvFileWriter implements AutoCloseable {
     
-    private final PrintWriter output;
+    private final Writer output;
     private final String[] columns;
     private final char delimiter;
     
-    public CsvFileWriter(PrintWriter output, String[] columns, char delimiter) {
+    public CsvFileWriter(Writer output, String[] columns, char delimiter) {
         if (columns.length < 1) {
             throw new IllegalArgumentException("Array columns must not be empty");
         }
@@ -26,7 +27,7 @@ public class CsvFileWriter implements AutoCloseable {
         this.delimiter = delimiter;
     }
     
-    public void write(CsvRow row) {
+    public void write(CsvRow row) throws IOException {
         int colNo = 0;
         for (String column : columns) {
             if (colNo > 0) {
@@ -39,7 +40,7 @@ public class CsvFileWriter implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
         output.flush();
     }
 }

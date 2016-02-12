@@ -64,19 +64,23 @@ public class XmlSplitter {
                             && buf[i + 3] == 'm'
                             && buf[i + 4] == 'l') {
                         fileEnded = true;
-                        remainingCharacters = Arrays.copyOfRange(buf, i, bytesCopied);
-                        System.out.print("\noff:" + off + ", len:" + _len + ": ");
-                        System.out.print(Arrays.copyOfRange(cbuf, off, off + i));
+                        if (buf.length < remainingCharacters.length) {
+                            remainingCharacters = Arrays.copyOfRange(remainingCharacters, i, remainingCharacters.length);
+                        } else {
+                            remainingCharacters = Arrays.copyOfRange(buf, i, bytesCopied);
+                        }
                         return i == 0 ? -1 : i;
                     } else {
                         start = false;
                         cbuf[off + i] = buf[i];
                     }
                 }
-                remainingCharacters = Arrays.copyOfRange(buf, limit, bytesCopied);
+                if (buf.length < remainingCharacters.length) {
+                    remainingCharacters = Arrays.copyOfRange(remainingCharacters, limit, remainingCharacters.length);
+                } else {
+                    remainingCharacters = Arrays.copyOfRange(buf, limit, bytesCopied);
+                }
 
-                System.out.print("\noff:" + off + ", len:" + _len + ": ");
-                System.out.print(Arrays.copyOfRange(cbuf, off, off + limit));
                 return limit;
             }
 
