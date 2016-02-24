@@ -11,12 +11,11 @@ package org.pcj.blast;
  */
 public class Configuration {
 
-    final static public String filename;
-    final static public String output;
-    final static public String dbPath;
-    final static public int sequencesToSendCount;
-    final static public int blastThreadCount;
-    final static public int bufferSize;
+    final static public String INPUT_FILENAME;
+    final static public String BLAST_DB_PATH;
+    final static public int SEQUENCES_BATCH_COUNT;
+    final static public int BLAST_THREADS_COUNT;
+    final static public int SEQUENCES_BUFFER_SIZE;
 
     static {
         int _bufferSize = 3;
@@ -24,24 +23,23 @@ public class Configuration {
             _bufferSize = Integer.parseInt(System.getProperty("buffer", "3"));
         } catch (NumberFormatException ex) {
         }
-        bufferSize = _bufferSize;
+        SEQUENCES_BUFFER_SIZE = _bufferSize;
 
         int _sequencesToSendCount = 1;
         try {
             _sequencesToSendCount = Integer.parseInt(System.getProperty("sequenceCount", "1"));
         } catch (NumberFormatException ex) {
         }
-        sequencesToSendCount = _sequencesToSendCount;
+        SEQUENCES_BATCH_COUNT = _sequencesToSendCount;
 
         int _blastThreadCount = 1;
         try {
             _blastThreadCount = Integer.parseInt(System.getProperty("blastThreads", "1"));
         } catch (NumberFormatException ex) {
         }
-        blastThreadCount = _blastThreadCount;
+        BLAST_THREADS_COUNT = _blastThreadCount;
 
-        dbPath = System.getProperty("db", "/icm/hydra/software/plgrid/blast/dbs/nt");
-        filename = System.getProperty("input", "davit-sequence-file-20151116.fasta");
-        output = System.getProperty("output", "stdout");
+        BLAST_DB_PATH = System.getProperty("db", "/icm/hydra/software/plgrid/blast/dbs/nt");
+        INPUT_FILENAME = System.getProperty("input", "davit-sequence-file-20151116.fasta");
     }
 }

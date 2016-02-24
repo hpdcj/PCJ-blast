@@ -29,14 +29,33 @@ import org.xml.sax.helpers.XMLReaderFactory;
  *
  * @author faramir
  */
-public class BlastXmlParser {
+public class BlastXmlParser implements AutoCloseable {
 
-    public static void processXmlFile(Reader reader, Writer localWriter, Writer globalWriter) throws JAXBException, SAXException, IOException {
-        BlastOutput blastOutput = readBlastXmlFile(reader);
-        generateRdata(blastOutput, localWriter, globalWriter);
+    private final Writer localWriter;
+    private final Writer globalWriter;
+
+    public BlastXmlParser(Writer localWriter, Writer globalWriter) {
+        this.localWriter = localWriter;
+        this.globalWriter = globalWriter;
     }
 
-    private static void generateRdata(BlastOutput blastOutput, Writer localWriter, Writer globalWriter) throws IOException {
+    public void processXmlFile(Reader reader) throws JAXBException, SAXException, IOException {
+        BlastOutput blastOutput = readBlastXmlFile(reader);
+        generateRdata(blastOutput);
+    }
+
+    public void flush() throws IOException {
+        localWriter.flush();
+        globalWriter.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        localWriter.close();
+        globalWriter.close();
+    }
+
+    private void generateRdata(BlastOutput blastOutput) throws IOException {
         try (CsvFileWriter localCsvWriter = new CsvFileWriter(localWriter,
                 new String[]{"Queryid",
                     "gi",
@@ -186,7 +205,7 @@ public class BlastXmlParser {
         }
     }
 
-    private static BlastOutput readBlastXmlFile(Reader reader) throws JAXBException, SAXException {
+    private BlastOutput readBlastXmlFile(Reader reader) throws JAXBException, SAXException {
         JAXBContext jc = JAXBContext.newInstance(BlastOutput.class);
         Unmarshaller u = jc.createUnmarshaller();
 
@@ -206,7 +225,7 @@ public class BlastXmlParser {
         return (BlastOutput) u.unmarshal(source);
     }
 
-    private static boolean isChimera(String hspMidline) {
+    private boolean isChimera(String hspMidline) {
         double minValue = Double.MAX_VALUE;
         double maxValue = Double.MIN_VALUE;
         int matchLength = hspMidline.length();
@@ -251,7 +270,7 @@ public class BlastXmlParser {
         return "<unknown id>";
     }
 
-    private static String getSubjectDef(String hitDef) {
+    private String getSubjectDef(String hitDef) {
         String subjectDef;
         if (hitDef.split(" ").length > 1) {
             subjectDef = hitDef;
@@ -261,10 +280,9 @@ public class BlastXmlParser {
         return subjectDef.replace("@", "").replace("#", ""); // @ is used for splitting columns, # for comments for R
     }
 
-    private static boolean isGlobalChimera(List<Double> globalIdentities) {
+    private boolean isGlobalChimera(List<Double> globalIdentities) {
         double minValue = globalIdentities.stream().min(Double::compare).get();
         double maxValue = globalIdentities.stream().max(Double::compare).get();
         return maxValue >= 90 && minValue < 90 && maxValue - minValue >= 5;
     }
-
 }

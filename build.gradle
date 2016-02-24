@@ -33,7 +33,7 @@ sourceSets {
 
 
 if (!hasProperty('mainClass')) {
-    ext.mainClass = 'org.pcj.biojava.Main'
+    ext.mainClass = 'org.pcj.blast.Main'
 }
 
 repositories {

@@ -23,19 +23,19 @@ public class InputFileReader {
 
     public static void readInputFile() throws IOException {
         readIndex = new int[PCJ.threadCount()];
-        Arrays.fill(readIndex, Configuration.bufferSize - 1);
+        Arrays.fill(readIndex, Configuration.SEQUENCES_BUFFER_SIZE - 1);
         PCJ.putLocal("readIndex", readIndex);
         
         writeIndex = new int[PCJ.threadCount()];
 
         threadNo = 0;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(Configuration.filename))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(Configuration.INPUT_FILENAME))) {
             String line;
             StringBuilder sb = new StringBuilder();
             for (int lineNo = 1; (line = br.readLine()) != null; ++lineNo) {
                 sb.append(line).append(System.lineSeparator());
-                if (lineNo % (Configuration.sequencesToSendCount * 2) == 0) {
+                if (lineNo % (Configuration.SEQUENCES_BATCH_COUNT * 2) == 0) {
                     sendSequences(sb);
                 }
             }
@@ -52,7 +52,7 @@ public class InputFileReader {
         String value = sb.toString();
         System.err.println("send to: " + threadNo + "[" + writeIndex[threadNo] + "] >>> " + value.substring(0, Math.min(value.length(), 60)) + " (" + value.length() + ")");
         PCJ.put(threadNo, "values", value, writeIndex[threadNo]);
-        writeIndex[threadNo] = (writeIndex[threadNo] + 1) % Configuration.bufferSize;
+        writeIndex[threadNo] = (writeIndex[threadNo] + 1) % Configuration.SEQUENCES_BUFFER_SIZE;
         sb.setLength(0);
         return threadNo;
     }
