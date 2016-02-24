@@ -1,0 +1,62 @@
+#!/bin/bash
+
+timer=`date +%s`
+
+function log {
+  output=$(echo "";echo "`date +'%y-%m-%d %H:%M:%S'`" ; while read -r line; do echo -e "\t$line"; done < <(echo -e "$@");echo "")
+  echo "$output"
+  echo "$output" 1>&2
+}
+
+log "Current date: `date`"
+log "Master host: `/bin/hostname`"
+log "Working directory: `pwd`"
+log "CPU info: `cat /proc/cpuinfo`"
+log "MEM info: `cat /proc/meminfo`"
+
+# --- LOADING MODULES ---
+log "Loading modules"
+module load plgrid/tools/java8
+module load plgrid/tools/openmpi
+module load plgrid/apps/r
+
+# --- SHOW VERSIONS ---
+log "Tools:\n * `mpicc --showme:version 2>&1`\n * `mpicc --version 2>&1`\n * `java -version 2>&1`\n * `R --version`"
+
+# --- ENVIRONMENT VARIABLES ---
+log "Environment variables: `env`"
+log "Set variables: `set`"
+
+# --- PREPARING NODES LIST ---
+log "Preparing nodes list"
+mpiexec hostname -s | sort -V > all_nodes.txt
+
+log "All nodes: `uniq -c all_nodes.txt | xargs -I {} echo ' {}' | paste -sd ','`"
+
+R_SCRIPT=Rscripts.R
+R_FUNCTION=blast_global_sort
+LOCAL_RESULTS=/mnt/groups/plggniasc/output-rdata-20151116/full.txtResultFile
+GLOBAL_RESULTS=/mnt/groups/plggniasc/output-rdata-20151116/full.txtGlobalResultFile
+OUTPUT=full.txtFinalResult.out
+
+exec 3>&1 4>&2
+
+log "Execution starting"
+startTime=`date +%s%N`
+    { { time Rscript -e 'source("'${R_SCRIPT}'"); '${R_FUNCTION}'("'${LOCAL_RESULTS}'", "'${GLOBAL_RESULTS}'", "'${OUTPUT}'")'
+         1>&3 2>&4 ; } 2>&1 ; } 3>&1 4>&2
+finishTime=`date +%s%N`
+log "Execution finished"
+
+log "Execution takes:\t$(( $finishTime - $startTime ))\tns" | tee -a results.out
+
+
+log "Tests: finished"
+
+exec 3>&- 4>&-
+
+timer=$(( `date +%s` - $timer ))
+h=$(( $timer / (60 * 60) ))
+m=$(( ($timer / 60) % 60 ))
+s=$(( $timer % 60 ))
+log "Script completed after ${h}h ${m}m ${s}s."

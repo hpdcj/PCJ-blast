@@ -1,4 +1,4 @@
-package org.pcj.biojava;
+package org.pcj.blast;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,7 +18,7 @@ import org.pcj.StartPoint;
 import org.pcj.Storage;
 import org.xml.sax.SAXException;
 
-public class Main extends Storage implements StartPoint {
+public class ProcessJoinedXmlFilesMain extends Storage implements StartPoint {
 
     final private String outxmlDirPath;
     final private String outxmlFileExtension;
@@ -35,9 +35,9 @@ public class Main extends Storage implements StartPoint {
      */
     public static void main(String[] args) throws Throwable {
         if (args.length > 0) {
-            PCJ.start(Main.class, Main.class, args[0]);
+            PCJ.start(ProcessJoinedXmlFilesMain.class, ProcessJoinedXmlFilesMain.class, args[0]);
         } else {
-            PCJ.start(Main.class, Main.class,
+            PCJ.start(ProcessJoinedXmlFilesMain.class, ProcessJoinedXmlFilesMain.class,
                     new String[]{"localhost", "localhost"});
         }
     }
@@ -74,14 +74,14 @@ public class Main extends Storage implements StartPoint {
                     try {
                         BlastXmlParser.processXmlFile(reader, localWriter, globalWriter);
                     } catch (IOException | JAXBException | SAXException ex) {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(ProcessJoinedXmlFilesMain.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     System.out.printf("%d: part processing time: %.7f%n", PCJ.myId(), (System.nanoTime() - partStartTime) / 1e9);
                 }
                 System.out.printf("%d: file processing time: %.7f%n", PCJ.myId(), (System.nanoTime() - fileStartTime) / 1e9);
             }
         } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProcessJoinedXmlFilesMain.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.printf("%d: Total execution time: %.7f%n", PCJ.myId(), (System.nanoTime() - globalStartTime) / 1e9);
     }

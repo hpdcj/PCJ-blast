@@ -1,5 +1,4 @@
-package org.pcj.biojava;
-
+package org.pcj.blast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -32,13 +31,7 @@ import org.xml.sax.SAXException;
  *
  * @author faramir
  */
-public class ReadFile extends Storage implements StartPoint {
-
-    final private String filename;
-    final private String output;
-    final private String dbPath;
-    final private int linesToSendCount;
-    final private int blastThreadCount;
+public class BlastRunner extends Storage implements StartPoint {
 
     @Shared
     private String[] values;
@@ -47,31 +40,8 @@ public class ReadFile extends Storage implements StartPoint {
     private int[] readIndex;
 
     {
-        try {
-            values = new String[Integer.parseInt(System.getProperty("buffer", "3"))];
-        } catch (NumberFormatException ex) {
-            values = new String[3];
-        }
-
-        int linesCount = 2;
-        try {
-            linesCount = Integer.parseInt(System.getProperty("linesCount", "2"));
-        } catch (NumberFormatException ex) {
-        }
-        linesToSendCount = linesCount;
-
-        int blastThreads = 1;
-        try {
-            blastThreads = Integer.parseInt(System.getProperty("blastThreads", "1"));
-        } catch (NumberFormatException ex) {
-        }
-        blastThreadCount = blastThreads;
-
-        dbPath = System.getProperty("db", "/icm/hydra/software/plgrid/blast/dbs/nt");
-        filename = System.getProperty("input", "davit-sequence-file-20151116.fasta");
-        output = System.getProperty("output", "stdout");
+        values = new String[Configuration.bufferSize];
     }
-
 
     @Override
     public void main() throws Throwable {
@@ -81,13 +51,13 @@ public class ReadFile extends Storage implements StartPoint {
 
             int[] writeIndex = new int[PCJ.threadCount()];
 
-            try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(Configuration.filename))) {
                 String line;
                 StringBuilder sb = new StringBuilder();
                 int threadNo = 0;
                 for (int lineNo = 1; (line = br.readLine()) != null; ++lineNo) {
                     sb.append(line).append(System.lineSeparator());
-                    if (lineNo % linesToSendCount == 0) {
+                    if (lineNo % Configuration.linesToSendCount == 0) {
                         threadNo = returnAvailableThreadOrWait(threadNo, writeIndex);
                         String value = sb.toString();
                         System.err.println("send to: " + threadNo + "[" + writeIndex[threadNo] + "] >>> " + value.substring(0, Math.min(value.length(), 60)) + " (" + value.length() + ")");
@@ -118,32 +88,25 @@ public class ReadFile extends Storage implements StartPoint {
                 PCJ.put(newThreadNo, "values", null, writeIndex[newThreadNo]);
             }
         } else {
-//            XmlMerger xmlMerger = null;
             for (int blockNo = 0;; blockNo++) {
                 PCJ.waitFor("values");
                 int index = blockNo % values.length;
                 String value = PCJ.getLocal("values", index);
                 if (value == null) {
                     System.out.println(PCJ.myId() + ": finished");
-//                    if (xmlMerger != null) {
-//                        try (Writer output = new BufferedWriter(new FileWriter("blastOut_" + PCJ.myId() + ".xml"))) {
-//                            output.write(xmlMerger.generateXml());
-//                        }
-//                    }
                     return;
                 }
                 if (blockNo == 0) {
                     long time = (long) (PCJ.myId() * 10);//(long)Math.random()*300;
-                    System.out.println(PCJ.myId() + ": sleep by: " + time+ "s");
+                    System.out.println(PCJ.myId() + ": sleep by: " + time + "s");
                     Thread.sleep(time * 1000);
                 }
-                
+
                 PCJ.put(0, "readIndex", index % values.length, PCJ.myId());
                 // process value
                 System.err.println(PCJ.myId() + ": received: " + value.substring(0, Math.min(value.length(), 60)) + " (" + value.length() + ")");
 
                 // http://www.ncbi.nlm.nih.gov/books/NBK279675/
-                // /icm/hydra/software/plgrid/blast/ncbi-blast-2.2.28+/bin/blastn -word_size 11 -gapopen 0 -gapextend 2 -penalty -1 -reward 1 -max_target_seqs 10 -evalue 0.001 -show_gis -outfmt 5 -db /icm/hydra/software/plgrid/blast/dbs/nt
                 ProcessBuilder processBuiler = new ProcessBuilder(
                         "/icm/hydra/software/plgrid/blast/ncbi-blast-2.2.28+/bin/blastn",
                         "-word_size", "11",
@@ -155,10 +118,10 @@ public class ReadFile extends Storage implements StartPoint {
                         "-evalue", "0.001",
                         "-show_gis",
                         "-outfmt", "5",
-                        "-out", "stdout".equals(output) ? output : (output + "_" + PCJ.myId() + "_" + blockNo + ".xml"),
-                        "-num_threads", "" + blastThreadCount,
-                        "-db", dbPath
-                ); //"/icm/hydra/software/plgrid/blast/dbs/nt"
+                        "-out", "-".equals(Configuration.output) ? "-" : (Configuration.output + "_" + PCJ.myId() + "_" + blockNo + ".xml"),
+                        "-num_threads", "" + Configuration.blastThreadCount,
+                        "-db", Configuration.dbPath
+                );
                 processBuiler.redirectError(ProcessBuilder.Redirect.appendTo(new File("outxml/err" + PCJ.myId() + ".txt")));
                 processBuiler.redirectOutput(ProcessBuilder.Redirect.appendTo(new File("outxml/out" + PCJ.myId() + ".txt")));
 
@@ -236,43 +199,5 @@ class StreamReader implements Runnable {
 
     public Throwable getException() {
         return exception;
-    }
-}
-
-class XmlMerger {
-
-    private final DocumentBuilder documentBuilder;
-    private final Document toDocument;
-
-    public XmlMerger(InputStream initialStream) throws ParserConfigurationException, SAXException, IOException {
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        documentBuilder = documentBuilderFactory.newDocumentBuilder();
-        toDocument = documentBuilder.parse(initialStream);
-    }
-
-    public void addXml(InputStream additionalStream) throws SAXException, IOException {
-        Document fromDocument = documentBuilder.parse(additionalStream);
-        NodeList toIterationsList = toDocument.getElementsByTagName("BlastOutput_iterations");
-        Node toIterations = toIterationsList.item(0);
-        NodeList fromIterations = fromDocument.getElementsByTagName("Iteration");
-        for (int i = 0; i < fromIterations.getLength(); ++i) {
-            Node iteration = toDocument.importNode(fromIterations.item(i), true);
-            toIterations.appendChild(iteration);
-        }
-    }
-
-    public String generateXml() throws TransformerException {
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        Transformer transformer = transformerFactory.newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC, "-//NCBI//NCBI BlastOutput/EN");
-        transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "http://www.ncbi.nlm.nih.gov/dtd/NCBI_BlastOutput.dtd");
-
-        DOMSource source = new DOMSource(toDocument);
-        StreamResult result = new StreamResult(new StringWriter());
-        transformer.transform(source, result);
-
-        return result.getWriter().toString();
-
     }
 }
