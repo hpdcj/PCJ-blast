@@ -14,7 +14,7 @@ public class Configuration {
     final static public String filename;
     final static public String output;
     final static public String dbPath;
-    final static public int linesToSendCount;
+    final static public int sequencesToSendCount;
     final static public int blastThreadCount;
     final static public int bufferSize;
 
@@ -26,12 +26,12 @@ public class Configuration {
         }
         bufferSize = _bufferSize;
 
-        int _linesToSendCount = 2;
+        int _sequencesToSendCount = 1;
         try {
-            _linesToSendCount = Integer.parseInt(System.getProperty("linesCount", "2"));
+            _sequencesToSendCount = Integer.parseInt(System.getProperty("sequenceCount", "1"));
         } catch (NumberFormatException ex) {
         }
-        linesToSendCount = _linesToSendCount;
+        sequencesToSendCount = _sequencesToSendCount;
 
         int _blastThreadCount = 1;
         try {
