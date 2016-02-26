@@ -17,19 +17,15 @@ public class Main {
         if (args.length > 0) {
             PCJ.start(BlastRunner.class, BlastRunner.class, args[0]);
         } else {
-            PCJ.start(BlastRunner.class, BlastRunner.class,
-                    new String[]{"localhost",
-                        "localhost",
-                        "localhost",
-                        "localhost",
-                    });
+            System.err.println("File with nodes description required as parameter!");
+            System.exit(1);
         }
     }
 
     private static void setLoggerLevel(Level level) throws SecurityException {
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setLevel(level);
-        
+
         Logger logger = Logger.getLogger("");
         logger.addHandler(consoleHandler);
         logger.setLevel(level);
