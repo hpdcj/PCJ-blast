@@ -3,6 +3,7 @@ apply from: 'jaxb.gradle'
 
 sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+//compileJava.options.compilerArgs.add '-Xlint:unchecked'
 
 jaxb {    
     inputs.file "src/main/resources/dtd/NCBI_BlastOutput.dtd!ncbi.blast.result.generated"

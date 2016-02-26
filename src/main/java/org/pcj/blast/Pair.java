@@ -19,7 +19,7 @@ public class Pair<T, V> {
     }
 
     public static <T, V> Pair<T, V> of(T first, V second) {
-        return new Pair(first, second);
+        return new Pair<>(first, second);
     }
 
     @Override

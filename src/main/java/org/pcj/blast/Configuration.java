@@ -5,11 +5,16 @@
  */
 package org.pcj.blast;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author faramir
  */
 public class Configuration {
+
+    private final static Logger LOGGER = Logger.getLogger(Configuration.class.getName());
 
     final static public String INPUT_FILENAME;
     final static public String BLAST_DB_PATH;
@@ -40,6 +45,12 @@ public class Configuration {
         BLAST_THREADS_COUNT = _blastThreadCount;
 
         BLAST_DB_PATH = System.getProperty("db", "/icm/hydra/software/plgrid/blast/dbs/nt");
-        INPUT_FILENAME = System.getProperty("input", "davit-sequence-file-20151116.fasta");
+        INPUT_FILENAME = System.getProperty("input", "blast-test.fasta");
+
+        LOGGER.log(Level.CONFIG, "INPUT_FILENAME = {0}", INPUT_FILENAME);
+        LOGGER.log(Level.CONFIG, "BLAST_DB_PATH = {0}", BLAST_DB_PATH);
+        LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT = {0}", SEQUENCES_BATCH_COUNT);
+        LOGGER.log(Level.CONFIG, "BLAST_THREADS_COUNT = {0}", BLAST_THREADS_COUNT);
+        LOGGER.log(Level.CONFIG, "SEQUENCES_BUFFER_SIZE = {0}", SEQUENCES_BUFFER_SIZE);
     }
 }

@@ -12,8 +12,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
@@ -26,6 +26,8 @@ import org.xml.sax.SAXException;
  */
 public class SequencesReceiverAndParser {
 
+    private final static Logger LOGGER = Logger.getLogger(SequencesReceiverAndParser.class.getName());
+
     private int blockNo;
     private final ProcessBuilder blastProcessBuiler;
     private final BlastXmlParser blastXmlParser;
@@ -33,8 +35,7 @@ public class SequencesReceiverAndParser {
     public SequencesReceiverAndParser() throws IOException {
         blockNo = 0;
 
-        // http://www.ncbi.nlm.nih.gov/books/NBK279675/
-        blastProcessBuiler = new ProcessBuilder(
+        List<String> command = Arrays.asList(
                 "/icm/hydra/software/plgrid/blast/ncbi-blast-2.2.28+/bin/blastn",
                 "-word_size", "11",
                 "-gapopen", "0",
@@ -47,8 +48,13 @@ public class SequencesReceiverAndParser {
                 "-outfmt", "5",
                 // "-out", "-".equals(Configuration.OUTPUT_FILENAME) ? "-" : (Configuration.OUTPUT_FILENAME + "_" + PCJ.myId() + "_" + blockNo + ".xml"),
                 "-num_threads", "" + Configuration.BLAST_THREADS_COUNT,
-                "-db", Configuration.BLAST_DB_PATH
-        );
+                "-db", Configuration.BLAST_DB_PATH);
+
+        LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", command));
+
+        // http://www.ncbi.nlm.nih.gov/books/NBK279675/
+        blastProcessBuiler = new ProcessBuilder(command);
+
         blastProcessBuiler.redirectError(ProcessBuilder.Redirect.INHERIT);
 
         PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%d.txtResultFile", PCJ.myId()))));
@@ -62,11 +68,12 @@ public class SequencesReceiverAndParser {
             while (true) {
                 String value = receiveSequencesBlock();
                 if (value == null) {
-                    System.out.println(PCJ.myId() + ": finished");
+                    LOGGER.log(Level.FINE, "{0}: finished", PCJ.myId());
+
                     return;
                 }
 
-                System.err.println(PCJ.myId() + ": received: " + value.substring(0, Math.min(value.length(), 60)) + " (" + value.length() + ")");
+                LOGGER.log(Level.FINER, "{0}: received: {1} ({2})", new Object[]{PCJ.myId(), value.substring(0, Math.min(value.length(), 60)), value.length()});
 
                 executeBlast(value);
 
@@ -103,8 +110,9 @@ public class SequencesReceiverAndParser {
                     try {
                         Reader reader = new InputStreamReader(process.getInputStream());
                         blastXmlParser.processXmlFile(reader);
+                        blastXmlParser.flush();
                     } catch (JAXBException | SAXException | IOException ex) {
-                        Logger.getLogger(SequencesReceiverAndParser.class.getName()).log(Level.SEVERE, null, ex);
+                        LOGGER.log(Level.SEVERE, "Exception while processing XML file", ex);
                     }
                 }
         );
@@ -114,9 +122,6 @@ public class SequencesReceiverAndParser {
         process.waitFor();
         xmlParserThread.join();
 
-        blastXmlParser.flush();
-
-        System.out.printf("%d: BLAST execution time: %.7f%n", PCJ.myId(), (System.nanoTime() - startTime) / 1e9);
+        LOGGER.log(Level.INFO, "{0}: BLAST execution time: {1}", new Object[]{PCJ.myId(), (System.nanoTime() - startTime) / 1e9});
     }
-
 }
