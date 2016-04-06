@@ -213,13 +213,12 @@ public class BlastXmlParser implements AutoCloseable {
         xmlReader.setFeature("http://xml.org/sax/features/namespaces", true);
         xmlReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
         xmlReader.setEntityResolver(
-                (publicId, systemId) -> {
-                    return Stream.of("NCBI_BlastOutput.dtd", "NCBI_Entity.mod.dtd", "NCBI_BlastOutput.mod.dtd")
-                    .filter(file -> systemId.contains(file))
-                    .findFirst()
-                    .map(file -> new InputSource(BlastOutput.class.getResourceAsStream("/dtd/" + file)))
-                    .orElse(null);
-                });
+                (publicId, systemId)
+                -> Stream.of("NCBI_BlastOutput.dtd", "NCBI_Entity.mod.dtd", "NCBI_BlastOutput.mod.dtd")
+                .filter(file -> systemId.contains(file))
+                .findFirst()
+                .map(file -> new InputSource(BlastOutput.class.getResourceAsStream("/dtd/" + file)))
+                .orElse(null));
         InputSource input = new InputSource(reader);
         Source source = new SAXSource(xmlReader, input);
         return (BlastOutput) u.unmarshal(source);

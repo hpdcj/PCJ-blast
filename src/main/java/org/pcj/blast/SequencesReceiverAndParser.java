@@ -6,6 +6,7 @@
 package org.pcj.blast;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,7 +37,7 @@ public class SequencesReceiverAndParser {
         blockNo = 0;
 
         List<String> command = Arrays.asList(
-                "/icm/hydra/software/plgrid/blast/ncbi-blast-2.2.28+/bin/blastn",
+                Configuration.BLAST_BINARY_PATH,
                 "-word_size", "11",
                 "-gapopen", "0",
                 "-gapextend", "2",
@@ -47,7 +48,7 @@ public class SequencesReceiverAndParser {
                 "-show_gis",
                 "-outfmt", "5",
                 // "-out", "-".equals(Configuration.OUTPUT_FILENAME) ? "-" : (Configuration.OUTPUT_FILENAME + "_" + PCJ.myId() + "_" + blockNo + ".xml"),
-                "-num_threads", "" + Configuration.BLAST_THREADS_COUNT,
+                "-num_threads", Integer.toString(Configuration.BLAST_THREADS_COUNT),
                 "-db", Configuration.BLAST_DB_PATH);
 
         LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", command));
@@ -57,8 +58,8 @@ public class SequencesReceiverAndParser {
 
         blastProcessBuiler.redirectError(ProcessBuilder.Redirect.INHERIT);
 
-        PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%d.txtResultFile", PCJ.myId()))));
-        PrintWriter globalWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%d.txtGlobalResultFile", PCJ.myId()))));
+        PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
+        PrintWriter globalWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtGlobalResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
 
         blastXmlParser = new BlastXmlParser(localWriter, globalWriter);
     }
@@ -92,7 +93,7 @@ public class SequencesReceiverAndParser {
             return null;
         }
 
-        PCJ.put(0, "readIndex", index % Configuration.SEQUENCES_BUFFER_SIZE, PCJ.myId());
+        PCJ.put(0, "readIndex", index, PCJ.myId());
 
         return value;
     }
@@ -100,10 +101,7 @@ public class SequencesReceiverAndParser {
     private void executeBlast(String value) throws InterruptedException, IOException, JAXBException, SAXException {
         long startTime = System.nanoTime();
         Process process = blastProcessBuiler.start();
-
-        try (OutputStream os = process.getOutputStream()) {
-            os.write(value.getBytes());
-        }
+        LOGGER.log(Level.FINE, "{0}: BLAST started", PCJ.myId());
 
         Thread xmlParserThread = new Thread(
                 () -> {
@@ -118,6 +116,10 @@ public class SequencesReceiverAndParser {
         );
 
         xmlParserThread.start();
+
+        try (OutputStream os = process.getOutputStream()) {
+            os.write(value.getBytes());
+        }
 
         process.waitFor();
         xmlParserThread.join();
