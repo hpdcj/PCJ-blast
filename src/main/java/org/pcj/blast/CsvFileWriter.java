@@ -13,11 +13,11 @@ import java.io.Writer;
  * @author faramir
  */
 public class CsvFileWriter implements AutoCloseable {
-    
+
     private final Writer output;
     private final String[] columns;
     private final char delimiter;
-    
+
     public CsvFileWriter(Writer output, String[] columns, char delimiter) {
         if (columns.length < 1) {
             throw new IllegalArgumentException("Array columns must not be empty");
@@ -26,7 +26,7 @@ public class CsvFileWriter implements AutoCloseable {
         this.columns = columns;
         this.delimiter = delimiter;
     }
-    
+
     public void write(CsvRow row) throws IOException {
         int colNo = 0;
         for (String column : columns) {
@@ -39,8 +39,12 @@ public class CsvFileWriter implements AutoCloseable {
         output.write(System.lineSeparator());
     }
 
+    public void flush() throws IOException {
+        output.flush();
+    }
+
     @Override
     public void close() throws IOException {
-        output.flush();
+        output.close();
     }
 }

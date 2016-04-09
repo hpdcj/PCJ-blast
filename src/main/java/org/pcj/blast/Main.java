@@ -12,7 +12,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws Throwable {
-        setLoggerLevel(Level.FINER);
+        setLoggerLevel(Level.FINE);
 
         if (args.length > 0) {
             PCJ.start(BlastRunner.class, BlastRunner.class, args[0]);

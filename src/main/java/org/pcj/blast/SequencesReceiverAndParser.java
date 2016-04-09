@@ -5,14 +5,15 @@
  */
 package org.pcj.blast;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -61,7 +62,13 @@ public class SequencesReceiverAndParser {
         PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
         PrintWriter globalWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtGlobalResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
 
-        blastXmlParser = new BlastXmlParser(localWriter, globalWriter);
+        BlastXmlParser xmlParser = null;
+        try {
+            xmlParser = new BlastXmlParser(localWriter, globalWriter);
+        } catch (JAXBException | SAXException ex) {
+            LOGGER.log(Level.SEVERE, "Exception while creating BlastXmlParser", ex);
+        }
+        this.blastXmlParser = xmlParser;
     }
 
     public void receiveAndParseSequences() throws InterruptedException, IOException, JAXBException, SAXException {
@@ -74,7 +81,7 @@ public class SequencesReceiverAndParser {
                     return;
                 }
 
-                LOGGER.log(Level.FINER, "{0}: received: {1} ({2})", new Object[]{PCJ.myId(), value.substring(0, Math.min(value.length(), 60)), value.length()});
+                LOGGER.log(Level.FINE, "{0}: received: {1} ({2})", new Object[]{PCJ.myId(), value.substring(0, Math.min(value.length(), 60)), value.length()});
 
                 executeBlast(value);
 
@@ -105,9 +112,8 @@ public class SequencesReceiverAndParser {
 
         Thread xmlParserThread = new Thread(
                 () -> {
-                    try {
-                        Reader reader = new InputStreamReader(process.getInputStream());
-                        blastXmlParser.processXmlFile(reader);
+                    try (InputStream inputStream = new BufferedInputStream(process.getInputStream())) {
+                        blastXmlParser.processXmlFile(inputStream);
                         blastXmlParser.flush();
                     } catch (JAXBException | SAXException | IOException ex) {
                         LOGGER.log(Level.SEVERE, "Exception while processing XML file", ex);
@@ -117,7 +123,7 @@ public class SequencesReceiverAndParser {
 
         xmlParserThread.start();
 
-        try (OutputStream os = process.getOutputStream()) {
+        try (OutputStream os = new BufferedOutputStream(process.getOutputStream())) {
             os.write(value.getBytes());
         }
 

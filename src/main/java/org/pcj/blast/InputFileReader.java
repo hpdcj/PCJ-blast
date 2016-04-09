@@ -66,7 +66,7 @@ public class InputFileReader {
     private void sendSequences(String value) throws ClassCastException {
         chooseNextAvailableThreadOrWait();
 
-        LOGGER.log(Level.FINER, "send to: {0}[{1}] >>> {2} ({3})", new Object[]{threadNo, writeIndex[threadNo], value.substring(0, Math.min(value.length(), 600)), value.length()});
+        LOGGER.log(Level.FINE, "send to: {0}[{1}] >>> {2} ({3})", new Object[]{threadNo, writeIndex[threadNo], value.substring(0, Math.min(value.length(), 600)), value.length()});
 
         PCJ.put(threadNo, "values", value, writeIndex[threadNo]);
         writeIndex[threadNo] = (writeIndex[threadNo] + 1) % Configuration.SEQUENCES_BUFFER_SIZE;

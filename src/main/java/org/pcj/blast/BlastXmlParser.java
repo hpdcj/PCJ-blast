@@ -6,6 +6,7 @@
 package org.pcj.blast;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -31,32 +32,13 @@ import org.xml.sax.helpers.XMLReaderFactory;
  */
 public class BlastXmlParser implements AutoCloseable {
 
-    private final Writer localWriter;
-    private final Writer globalWriter;
+    private final CsvFileWriter localCsvWriter;
+    private final CsvFileWriter globalCsvWriter;
+    private final XMLReader xmlReader;
+    private final Unmarshaller unmarshallel;
 
-    public BlastXmlParser(Writer localWriter, Writer globalWriter) {
-        this.localWriter = localWriter;
-        this.globalWriter = globalWriter;
-    }
-
-    public void processXmlFile(Reader reader) throws JAXBException, SAXException, IOException {
-        BlastOutput blastOutput = readBlastXmlFile(reader);
-        generateRdata(blastOutput);
-    }
-
-    public void flush() throws IOException {
-        localWriter.flush();
-        globalWriter.flush();
-    }
-
-    @Override
-    public void close() throws IOException {
-        localWriter.close();
-        globalWriter.close();
-    }
-
-    private void generateRdata(BlastOutput blastOutput) throws IOException {
-        try (CsvFileWriter localCsvWriter = new CsvFileWriter(localWriter,
+    public BlastXmlParser(Writer localWriter, Writer globalWriter) throws JAXBException, SAXException {
+        this.localCsvWriter = new CsvFileWriter(localWriter,
                 new String[]{"Queryid",
                     "gi",
                     "identity",
@@ -74,142 +56,23 @@ public class BlastXmlParser implements AutoCloseable {
                     "Length",
                     "Subject_Length",},
                 '@');
-                CsvFileWriter globalCsvWriter = new CsvFileWriter(globalWriter,
-                        new String[]{"Queryid",
-                            "gi",
-                            "global_Coverage",
-                            "global_q_start",
-                            "global_q_end",
-                            "global_total_lengh_of_gaps",
-                            "global_gaps",
-                            "global_chimera",
-                            "global_orientation",},
-                        '\t')) {
 
-            int length = Integer.parseInt(blastOutput.getBlastOutputQueryLen());
-            for (Iteration iteration : blastOutput.getBlastOutputIterations().getIteration()) {
-                String queryId = iteration.getIterationQueryDef();
-                int queryLength = Integer.parseInt(iteration.getIterationQueryLen());
-                for (Hit hit : iteration.getIterationHits().getHit()) {
-                    String subjectId = getSubjectId(hit.getHitId(), hit.getHitDef());
-                    String subjectDef = getSubjectDef(hit.getHitDef());
-                    int subjectLength = Integer.parseInt(hit.getHitLen());
+        this.globalCsvWriter = new CsvFileWriter(globalWriter,
+                new String[]{"Queryid",
+                    "gi",
+                    "global_Coverage",
+                    "global_q_start",
+                    "global_q_end",
+                    "global_total_lengh_of_gaps",
+                    "global_gaps",
+                    "global_chimera",
+                    "global_orientation",},
+                '\t');
 
-                    int globalMinQueryStart = Integer.MAX_VALUE;
-                    int globalMaxQueryEnd = Integer.MIN_VALUE;
-                    int globalTotalLenghOfGaps = 0;
-                    List<Pair<Integer, Integer>> gaps = new ArrayList<>();
-                    GlobalOrientation globalOrientation = GlobalOrientation.UNKNOWN;
-
-                    List<Double> globalIdentities = new ArrayList<>();
-
-                    for (Hsp hsp : hit.getHitHsps().getHsp()) {
-                        int hspPositive = Integer.parseInt(hsp.getHspPositive());
-                        int hspLength = Integer.parseInt(hsp.getHspAlignLen());
-                        int subjectFrom = Integer.parseInt(hsp.getHspHitFrom());
-                        int subjectTo = Integer.parseInt(hsp.getHspHitTo());
-                        int queryStart = Integer.parseInt(hsp.getHspQueryFrom());
-                        int queryEnd = Integer.parseInt(hsp.getHspQueryTo());
-                        double eValue = Double.parseDouble(hsp.getHspEvalue());
-                        double score = Double.parseDouble(hsp.getHspScore());
-
-                        double identity = 100. * hspPositive / hspLength;
-                        globalIdentities.add(identity);
-
-                        int subjectStrand;
-                        if (subjectFrom < subjectTo) {
-                            subjectStrand = 1;
-                        } else {
-                            subjectStrand = -1;
-                            int temp = subjectFrom;
-                            subjectFrom = subjectTo;
-                            subjectTo = temp;
-                        }
-
-                        if (queryEnd < queryStart) {
-                            int temp = queryStart;
-                            queryStart = queryEnd;
-                            queryEnd = temp;
-                        }
-                        double coverage;
-                        if (queryLength < subjectLength) {
-                            coverage = 100. * (queryEnd - queryStart + 1) / queryLength;
-                        } else {
-                            coverage = 100. * (subjectTo - subjectFrom + 1) / subjectLength;
-                        }
-
-                        if (globalOrientation != GlobalOrientation.INVERTED) {
-                            if (subjectStrand > 0) {
-                                if (globalOrientation == GlobalOrientation.UNKNOWN) {
-                                    globalOrientation = GlobalOrientation.PLUS;
-                                } else if (globalOrientation == GlobalOrientation.MINUS) {
-                                    globalOrientation = GlobalOrientation.INVERTED;
-                                }
-                            } else if (globalOrientation == GlobalOrientation.UNKNOWN) {
-                                globalOrientation = GlobalOrientation.MINUS;
-                            } else if (globalOrientation == GlobalOrientation.PLUS) {
-                                globalOrientation = GlobalOrientation.INVERTED;
-                            }
-                        }
-
-                        if (globalMinQueryStart > queryStart) {
-                            globalMinQueryStart = queryStart;
-                        }
-                        if (globalMaxQueryEnd != Integer.MIN_VALUE && queryStart - globalMaxQueryEnd >= 1) {
-                            int gapStart = globalMaxQueryEnd;
-                            int gapEnd = queryStart;
-                            gaps.add(Pair.of(gapStart, gapEnd));
-
-                            globalTotalLenghOfGaps += gapEnd - gapStart;
-                        }
-                        if (globalMaxQueryEnd == Integer.MIN_VALUE || queryEnd > globalMaxQueryEnd) {
-                            globalMaxQueryEnd = queryEnd;
-                        }
-
-                        CsvRow localRow = new CsvRow();
-
-                        localRow.set("Queryid", queryId);
-                        localRow.set("gi", subjectId);
-                        localRow.set("identity", identity);
-                        localRow.set("Coverage", coverage);
-                        localRow.set("Strain", subjectDef);
-                        localRow.set("alignment.length", hspLength);
-                        localRow.set("Chimera", isChimera(hsp.getHspMidline()) ? "Yes" : "No");
-                        localRow.set("Strand", subjectStrand);
-                        localRow.set("q.start", queryStart);
-                        localRow.set("q.end", queryEnd);
-                        localRow.set("s.start", subjectFrom);
-                        localRow.set("s.end", subjectTo);
-                        localRow.set("e.value", eValue);
-                        localRow.set("score", score);
-                        localRow.set("Length", length);
-                        localRow.set("Subject_Length", subjectLength);
-
-                        localCsvWriter.write(localRow);
-                    }
-
-                    CsvRow globalRow = new CsvRow();
-                    globalRow.set("Queryid", queryId);
-                    globalRow.set("gi", subjectId);
-                    globalRow.set("global_Coverage", 100. * ((globalMaxQueryEnd - globalMinQueryStart) - globalTotalLenghOfGaps) / length);
-                    globalRow.set("global_q_start", globalMinQueryStart);
-                    globalRow.set("global_q_end", globalMaxQueryEnd);
-                    globalRow.set("global_total_lengh_of_gaps", globalTotalLenghOfGaps);
-                    globalRow.set("global_gaps", gaps.toString());
-                    globalRow.set("global_chimera", isGlobalChimera(globalIdentities) ? "Yes" : "No");
-                    globalRow.set("global_orientation", globalOrientation.toString());
-
-                    globalCsvWriter.write(globalRow);
-                }
-            }
-        }
-    }
-
-    private BlastOutput readBlastXmlFile(Reader reader) throws JAXBException, SAXException {
         JAXBContext jc = JAXBContext.newInstance(BlastOutput.class);
-        Unmarshaller u = jc.createUnmarshaller();
+        unmarshallel = jc.createUnmarshaller();
 
-        XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+        xmlReader = XMLReaderFactory.createXMLReader();
         xmlReader.setFeature("http://xml.org/sax/features/namespaces", true);
         xmlReader.setFeature("http://xml.org/sax/features/namespace-prefixes", true);
         xmlReader.setEntityResolver(
@@ -219,9 +82,147 @@ public class BlastXmlParser implements AutoCloseable {
                 .findFirst()
                 .map(file -> new InputSource(BlastOutput.class.getResourceAsStream("/dtd/" + file)))
                 .orElse(null));
-        InputSource input = new InputSource(reader);
-        Source source = new SAXSource(xmlReader, input);
-        return (BlastOutput) u.unmarshal(source);
+    }
+
+    public void processXmlFile(InputStream inputStream) throws JAXBException, SAXException, IOException {
+        BlastOutput blastOutput = readBlastXmlFile(inputStream);
+        generateRdata(blastOutput);
+    }
+
+    public void flush() throws IOException {
+        localCsvWriter.flush();
+        globalCsvWriter.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        localCsvWriter.close();
+        globalCsvWriter.close();
+    }
+
+    private void generateRdata(BlastOutput blastOutput) throws IOException {
+        int length = Integer.parseInt(blastOutput.getBlastOutputQueryLen());
+        for (Iteration iteration : blastOutput.getBlastOutputIterations().getIteration()) {
+            String queryId = iteration.getIterationQueryDef();
+            int queryLength = Integer.parseInt(iteration.getIterationQueryLen());
+            for (Hit hit : iteration.getIterationHits().getHit()) {
+                String subjectId = getSubjectId(hit.getHitId(), hit.getHitDef());
+                String subjectDef = getSubjectDef(hit.getHitDef());
+                int subjectLength = Integer.parseInt(hit.getHitLen());
+
+                int globalMinQueryStart = Integer.MAX_VALUE;
+                int globalMaxQueryEnd = Integer.MIN_VALUE;
+                int globalTotalLenghOfGaps = 0;
+                List<Pair<Integer, Integer>> gaps = new ArrayList<>();
+                GlobalOrientation globalOrientation = GlobalOrientation.UNKNOWN;
+
+                List<Double> globalIdentities = new ArrayList<>();
+
+                for (Hsp hsp : hit.getHitHsps().getHsp()) {
+                    int hspPositive = Integer.parseInt(hsp.getHspPositive());
+                    int hspLength = Integer.parseInt(hsp.getHspAlignLen());
+                    int subjectFrom = Integer.parseInt(hsp.getHspHitFrom());
+                    int subjectTo = Integer.parseInt(hsp.getHspHitTo());
+                    int queryStart = Integer.parseInt(hsp.getHspQueryFrom());
+                    int queryEnd = Integer.parseInt(hsp.getHspQueryTo());
+                    double eValue = Double.parseDouble(hsp.getHspEvalue());
+                    double score = Double.parseDouble(hsp.getHspScore());
+
+                    double identity = 100. * hspPositive / hspLength;
+                    globalIdentities.add(identity);
+
+                    int subjectStrand;
+                    if (subjectFrom < subjectTo) {
+                        subjectStrand = 1;
+                    } else {
+                        subjectStrand = -1;
+                        int temp = subjectFrom;
+                        subjectFrom = subjectTo;
+                        subjectTo = temp;
+                    }
+
+                    if (queryEnd < queryStart) {
+                        int temp = queryStart;
+                        queryStart = queryEnd;
+                        queryEnd = temp;
+                    }
+                    double coverage;
+                    if (queryLength < subjectLength) {
+                        coverage = 100. * (queryEnd - queryStart + 1) / queryLength;
+                    } else {
+                        coverage = 100. * (subjectTo - subjectFrom + 1) / subjectLength;
+                    }
+
+                    if (globalOrientation != GlobalOrientation.INVERTED) {
+                        if (subjectStrand > 0) {
+                            if (globalOrientation == GlobalOrientation.UNKNOWN) {
+                                globalOrientation = GlobalOrientation.PLUS;
+                            } else if (globalOrientation == GlobalOrientation.MINUS) {
+                                globalOrientation = GlobalOrientation.INVERTED;
+                            }
+                        } else if (globalOrientation == GlobalOrientation.UNKNOWN) {
+                            globalOrientation = GlobalOrientation.MINUS;
+                        } else if (globalOrientation == GlobalOrientation.PLUS) {
+                            globalOrientation = GlobalOrientation.INVERTED;
+                        }
+                    }
+
+                    if (globalMinQueryStart > queryStart) {
+                        globalMinQueryStart = queryStart;
+                    }
+                    if (globalMaxQueryEnd != Integer.MIN_VALUE && queryStart - globalMaxQueryEnd >= 1) {
+                        int gapStart = globalMaxQueryEnd;
+                        int gapEnd = queryStart;
+                        gaps.add(Pair.of(gapStart, gapEnd));
+
+                        globalTotalLenghOfGaps += gapEnd - gapStart;
+                    }
+                    if (globalMaxQueryEnd == Integer.MIN_VALUE || queryEnd > globalMaxQueryEnd) {
+                        globalMaxQueryEnd = queryEnd;
+                    }
+
+                    CsvRow localRow = new CsvRow();
+
+                    localRow.set("Queryid", queryId);
+                    localRow.set("gi", subjectId);
+                    localRow.set("identity", identity);
+                    localRow.set("Coverage", coverage);
+                    localRow.set("Strain", subjectDef);
+                    localRow.set("alignment.length", hspLength);
+                    localRow.set("Chimera", isChimera(hsp.getHspMidline()) ? "Yes" : "No");
+                    localRow.set("Strand", subjectStrand);
+                    localRow.set("q.start", queryStart);
+                    localRow.set("q.end", queryEnd);
+                    localRow.set("s.start", subjectFrom);
+                    localRow.set("s.end", subjectTo);
+                    localRow.set("e.value", eValue);
+                    localRow.set("score", score);
+                    localRow.set("Length", length);
+                    localRow.set("Subject_Length", subjectLength);
+
+                    localCsvWriter.write(localRow);
+                }
+
+                CsvRow globalRow = new CsvRow();
+                globalRow.set("Queryid", queryId);
+                globalRow.set("gi", subjectId);
+                globalRow.set("global_Coverage", 100. * ((globalMaxQueryEnd - globalMinQueryStart) - globalTotalLenghOfGaps) / length);
+                globalRow.set("global_q_start", globalMinQueryStart);
+                globalRow.set("global_q_end", globalMaxQueryEnd);
+                globalRow.set("global_total_lengh_of_gaps", globalTotalLenghOfGaps);
+                globalRow.set("global_gaps", gaps.toString());
+                globalRow.set("global_chimera", isGlobalChimera(globalIdentities) ? "Yes" : "No");
+                globalRow.set("global_orientation", globalOrientation.toString());
+
+                globalCsvWriter.write(globalRow);
+            }
+        }
+    }
+
+    private BlastOutput readBlastXmlFile(InputStream inputStream) throws JAXBException {
+        InputSource inputSource = new InputSource(inputStream);
+        Source source = new SAXSource(xmlReader, inputSource);
+        return (BlastOutput) unmarshallel.unmarshal(source);
     }
 
     private boolean isChimera(String hspMidline) {
