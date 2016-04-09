@@ -18,6 +18,7 @@ public class Configuration {
 
     final static public String INPUT_FILENAME;
     final static public String OUTPUT_DIR;
+    final static public int OUTPUT_FORMAT;
     final static public String BLAST_BINARY_PATH;
     final static public String BLAST_DB_PATH;
     final static public int SEQUENCES_BATCH_COUNT;
@@ -46,6 +47,16 @@ public class Configuration {
         }
         BLAST_THREADS_COUNT = _blastThreadCount;
 
+        int _outputFormat = 0;
+        try {
+            _outputFormat = Integer.parseInt(System.getProperty("outputFormat", "-1"));
+            if (_outputFormat < 0 || _outputFormat > 14) {
+                _outputFormat = -1;
+            }
+        } catch (NumberFormatException ex) {
+        }
+        OUTPUT_FORMAT = _outputFormat;
+
         INPUT_FILENAME = System.getProperty("input", "blast-test.fasta");
         OUTPUT_DIR = System.getProperty("output", ".");
         BLAST_DB_PATH = System.getProperty("db", "/icm/hydra/software/plgrid/blast/dbs/nt");
@@ -53,6 +64,7 @@ public class Configuration {
 
         LOGGER.log(Level.CONFIG, "INPUT_FILENAME = {0}", INPUT_FILENAME);
         LOGGER.log(Level.CONFIG, "OUTPUT_DIR = {0}", OUTPUT_DIR);
+        LOGGER.log(Level.CONFIG, "OUTPUT_FORMAT = {0}", OUTPUT_FORMAT);
         LOGGER.log(Level.CONFIG, "BLAST_DB_PATH = {0}", BLAST_DB_PATH);
         LOGGER.log(Level.CONFIG, "BLAST_BINARY_PATH = {0}", BLAST_BINARY_PATH);
         LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT = {0}", SEQUENCES_BATCH_COUNT);

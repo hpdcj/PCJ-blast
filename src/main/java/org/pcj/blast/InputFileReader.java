@@ -22,8 +22,8 @@ public class InputFileReader {
     private final static Logger LOGGER = Logger.getLogger(InputFileReader.class.getName());
 
     private int threadNo;
-    private int[] readIndex;
-    private int[] writeIndex;
+    private final int[] readIndex;
+    private final int[] writeIndex;
 
     public InputFileReader() {
         readIndex = new int[PCJ.threadCount()];
@@ -36,7 +36,6 @@ public class InputFileReader {
     }
 
     public void readInputFile(String filename) throws IOException {
-
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             StringBuilder sb = new StringBuilder();
@@ -66,7 +65,8 @@ public class InputFileReader {
     private void sendSequences(String value) throws ClassCastException {
         chooseNextAvailableThreadOrWait();
 
-        LOGGER.log(Level.FINE, "send to: {0}[{1}] >>> {2} ({3})", new Object[]{threadNo, writeIndex[threadNo], value.substring(0, Math.min(value.length(), 600)), value.length()});
+        LOGGER.log(Level.FINE, "send to: {0}[{1}] >>> {2} ({3})",
+                new Object[]{threadNo, writeIndex[threadNo], value.substring(0, Math.min(value.length(), 40)), value.length()});
 
         PCJ.put(threadNo, "values", value, writeIndex[threadNo]);
         writeIndex[threadNo] = (writeIndex[threadNo] + 1) % Configuration.SEQUENCES_BUFFER_SIZE;

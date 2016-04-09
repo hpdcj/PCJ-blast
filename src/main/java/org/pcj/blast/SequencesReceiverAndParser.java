@@ -37,7 +37,13 @@ public class SequencesReceiverAndParser {
     public SequencesReceiverAndParser() throws IOException {
         blockNo = 0;
 
-        List<String> command = Arrays.asList(
+        int outfmt = 5;
+        if (Configuration.OUTPUT_FORMAT >= 0) {
+            outfmt = Configuration.OUTPUT_FORMAT;
+        }
+
+        // http://www.ncbi.nlm.nih.gov/books/NBK279675/
+        List<String> blastCommand = Arrays.asList(
                 Configuration.BLAST_BINARY_PATH,
                 "-word_size", "11",
                 "-gapopen", "0",
@@ -47,28 +53,32 @@ public class SequencesReceiverAndParser {
                 "-max_target_seqs", "10",
                 "-evalue", "0.001",
                 "-show_gis",
-                "-outfmt", "5",
-                // "-out", "-".equals(Configuration.OUTPUT_FILENAME) ? "-" : (Configuration.OUTPUT_FILENAME + "_" + PCJ.myId() + "_" + blockNo + ".xml"),
+                "-outfmt", Integer.toString(outfmt),
                 "-num_threads", Integer.toString(Configuration.BLAST_THREADS_COUNT),
                 "-db", Configuration.BLAST_DB_PATH);
 
-        LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", command));
+        LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", blastCommand));
 
-        // http://www.ncbi.nlm.nih.gov/books/NBK279675/
-        blastProcessBuiler = new ProcessBuilder(command);
-
+        blastProcessBuiler = new ProcessBuilder(blastCommand);
         blastProcessBuiler.redirectError(ProcessBuilder.Redirect.INHERIT);
+        
+        if (Configuration.OUTPUT_FORMAT >= 0) {
+            blastProcessBuiler.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(
+                    String.format("%s%c%d.blastOutput", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
+         
+            this.blastXmlParser = null;
+        } else {
+            PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
+            PrintWriter globalWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtGlobalResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
 
-        PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
-        PrintWriter globalWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtGlobalResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
-
-        BlastXmlParser xmlParser = null;
-        try {
-            xmlParser = new BlastXmlParser(localWriter, globalWriter);
-        } catch (JAXBException | SAXException ex) {
-            LOGGER.log(Level.SEVERE, "Exception while creating BlastXmlParser", ex);
+            BlastXmlParser xmlParser = null;
+            try {
+                xmlParser = new BlastXmlParser(localWriter, globalWriter);
+            } catch (JAXBException | SAXException ex) {
+                LOGGER.log(Level.SEVERE, "Exception while creating BlastXmlParser", ex);
+            }
+            this.blastXmlParser = xmlParser;
         }
-        this.blastXmlParser = xmlParser;
     }
 
     public void receiveAndParseSequences() throws InterruptedException, IOException, JAXBException, SAXException {
@@ -81,14 +91,17 @@ public class SequencesReceiverAndParser {
                     return;
                 }
 
-                LOGGER.log(Level.FINE, "{0}: received: {1} ({2})", new Object[]{PCJ.myId(), value.substring(0, Math.min(value.length(), 60)), value.length()});
+                LOGGER.log(Level.FINE, "{0}: received: {1} ({2})",
+                        new Object[]{PCJ.myId(), value.substring(0, Math.min(value.length(), 40)), value.length()});
 
                 executeBlast(value);
 
                 ++blockNo;
             }
         } finally {
-            blastXmlParser.close();
+            if (blastXmlParser != null) {
+                blastXmlParser.close();
+            }
         }
     }
 
@@ -107,28 +120,35 @@ public class SequencesReceiverAndParser {
 
     private void executeBlast(String value) throws InterruptedException, IOException, JAXBException, SAXException {
         long startTime = System.nanoTime();
+
         Process process = blastProcessBuiler.start();
         LOGGER.log(Level.FINE, "{0}: BLAST started", PCJ.myId());
 
-        Thread xmlParserThread = new Thread(
-                () -> {
-                    try (InputStream inputStream = new BufferedInputStream(process.getInputStream())) {
-                        blastXmlParser.processXmlFile(inputStream);
-                        blastXmlParser.flush();
-                    } catch (JAXBException | SAXException | IOException ex) {
-                        LOGGER.log(Level.SEVERE, "Exception while processing XML file", ex);
+        Thread xmlParserThread = null;
+        if (Configuration.OUTPUT_FORMAT < 0) {
+            xmlParserThread = new Thread(
+                    () -> {
+                        try (InputStream inputStream = new BufferedInputStream(process.getInputStream())) {
+                            blastXmlParser.processXmlFile(inputStream);
+                            blastXmlParser.flush();
+                        } catch (JAXBException | SAXException | IOException ex) {
+                            LOGGER.log(Level.SEVERE, "Exception while processing XML file", ex);
+                        }
                     }
-                }
-        );
+            );
 
-        xmlParserThread.start();
+            xmlParserThread.start();
+        }
 
         try (OutputStream os = new BufferedOutputStream(process.getOutputStream())) {
             os.write(value.getBytes());
         }
 
         process.waitFor();
-        xmlParserThread.join();
+
+        if (xmlParserThread != null) {
+            xmlParserThread.join();
+        }
 
         LOGGER.log(Level.INFO, "{0}: BLAST execution time: {1}", new Object[]{PCJ.myId(), (System.nanoTime() - startTime) / 1e9});
     }
