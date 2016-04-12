@@ -1,5 +1,6 @@
 package org.pcj.blast;
 
+import java.io.File;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -15,6 +16,12 @@ public class Main {
         setLoggerLevel(Level.FINE);
 
         if (args.length > 0) {
+            File sequenceFile = new File(Configuration.INPUT_FILENAME);
+            if (sequenceFile.isFile() == false) {
+                System.err.println("File with sequence does not exists: " + Configuration.INPUT_FILENAME);
+                System.exit(1);
+            }
+
             PCJ.start(BlastRunner.class, BlastRunner.class, args[0]);
         } else {
             System.err.println("File with nodes description required as parameter!");
