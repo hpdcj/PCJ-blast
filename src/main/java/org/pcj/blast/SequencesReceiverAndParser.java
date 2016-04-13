@@ -61,11 +61,11 @@ public class SequencesReceiverAndParser {
 
         blastProcessBuiler = new ProcessBuilder(blastCommand);
         blastProcessBuiler.redirectError(ProcessBuilder.Redirect.INHERIT);
-        
+
         if (Configuration.OUTPUT_FORMAT >= 0) {
             blastProcessBuiler.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(
                     String.format("%s%c%d.blastOutput", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
-         
+
             this.blastXmlParser = null;
         } else {
             PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
@@ -96,6 +96,8 @@ public class SequencesReceiverAndParser {
 
                 executeBlast(value);
 
+                informAboutCompletion();
+
                 ++blockNo;
             }
         } finally {
@@ -108,14 +110,12 @@ public class SequencesReceiverAndParser {
     private String receiveSequencesBlock() {
         PCJ.waitFor("values");
         int index = blockNo % Configuration.SEQUENCES_BUFFER_SIZE;
-        String value = PCJ.getLocal("values", index);
-        if (value == null) {
-            return null;
-        }
+        return PCJ.getLocal("values", index);
+    }
 
+    private void informAboutCompletion() {
+        int index = blockNo % Configuration.SEQUENCES_BUFFER_SIZE;
         PCJ.put(0, "readIndex", index, PCJ.myId());
-
-        return value;
     }
 
     private void executeBlast(String value) throws InterruptedException, IOException, JAXBException, SAXException {
@@ -152,4 +152,5 @@ public class SequencesReceiverAndParser {
 
         LOGGER.log(Level.INFO, "{0}: BLAST execution time: {1}", new Object[]{PCJ.myId(), (System.nanoTime() - startTime) / 1e9});
     }
+
 }
