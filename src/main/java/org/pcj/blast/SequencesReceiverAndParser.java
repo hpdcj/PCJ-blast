@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
 import org.pcj.PCJ;
+import org.pcj.Storage;
 import org.xml.sax.SAXException;
 
 /**
@@ -30,11 +31,20 @@ public class SequencesReceiverAndParser {
 
     private final static Logger LOGGER = Logger.getLogger(SequencesReceiverAndParser.class.getName());
 
+    @Storage(SequencesReceiverAndParser.class)
+    enum Shared {
+        values
+    }
+
+    @SuppressWarnings("final")
+    private final String[] values = new String[Configuration.SEQUENCES_BUFFER_SIZE];
+
     private int blockNo;
     private final ProcessBuilder blastProcessBuiler;
     private final BlastXmlParser blastXmlParser;
 
     public SequencesReceiverAndParser() throws IOException {
+        PCJ.registerStorage(Shared.class);
         blockNo = 0;
 
         int outfmt = 5;
@@ -108,14 +118,14 @@ public class SequencesReceiverAndParser {
     }
 
     private String receiveSequencesBlock() {
-        PCJ.waitFor(BlastRunner.Shared.values);
+        PCJ.waitFor(SequencesReceiverAndParser.Shared.values);
         int index = blockNo % Configuration.SEQUENCES_BUFFER_SIZE;
-        return PCJ.getLocal(BlastRunner.Shared.values, index);
+        return PCJ.getLocal(SequencesReceiverAndParser.Shared.values, index);
     }
 
     private void informAboutCompletion() {
         int index = blockNo % Configuration.SEQUENCES_BUFFER_SIZE;
-        PCJ.put(index, 0, BlastRunner.Shared.readIndex, PCJ.myId());
+        PCJ.put(index, 0, InputFileReader.Shared.readIndex, PCJ.myId());
     }
 
     private void executeBlast(String value) throws InterruptedException, IOException, JAXBException, SAXException {

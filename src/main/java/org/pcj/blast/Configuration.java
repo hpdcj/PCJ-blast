@@ -26,20 +26,13 @@ public class Configuration {
     final static public int SEQUENCES_BUFFER_SIZE;
 
     static {
-        int _bufferSize = 1;
-        try {
-            _bufferSize = Integer.parseInt(System.getProperty("buffer", "1"));
-            if (_bufferSize < 1) {
-                _bufferSize = 1;
-            }
-        } catch (NumberFormatException ex) {
-        }
-        SEQUENCES_BUFFER_SIZE = _bufferSize + 1; // "+1" for one empty slot
+        SEQUENCES_BUFFER_SIZE = 1 + 1; // "+1" for one empty slot
 
         int _sequencesToSendCount = 1;
         try {
             _sequencesToSendCount = Integer.parseInt(System.getProperty("sequenceCount", "1"));
         } catch (NumberFormatException ex) {
+            LOGGER.log(Level.CONFIG, "Unable to read sequenceCount property: {0}", ex);
         }
         SEQUENCES_BATCH_COUNT = _sequencesToSendCount;
 
@@ -47,6 +40,7 @@ public class Configuration {
         try {
             _blastThreadCount = Integer.parseInt(System.getProperty("blastThreads", "1"));
         } catch (NumberFormatException ex) {
+            LOGGER.log(Level.CONFIG, "Unable to read blastThreads property: {0}", ex);
         }
         BLAST_THREADS_COUNT = _blastThreadCount;
 
@@ -57,6 +51,7 @@ public class Configuration {
                 _outputFormat = -1;
             }
         } catch (NumberFormatException ex) {
+            LOGGER.log(Level.CONFIG, "Unable to read outputFormat property: {0}", ex);
         }
         OUTPUT_FORMAT = _outputFormat;
 
@@ -72,6 +67,5 @@ public class Configuration {
         LOGGER.log(Level.CONFIG, "BLAST_BINARY_PATH = {0}", BLAST_BINARY_PATH);
         LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT = {0}", SEQUENCES_BATCH_COUNT);
         LOGGER.log(Level.CONFIG, "BLAST_THREADS_COUNT = {0}", BLAST_THREADS_COUNT);
-        LOGGER.log(Level.CONFIG, "SEQUENCES_BUFFER_SIZE = {0} + 1 (for empty slot)", SEQUENCES_BUFFER_SIZE - 1);
     }
 }

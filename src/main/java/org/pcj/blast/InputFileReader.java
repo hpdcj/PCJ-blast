@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.pcj.PCJ;
+import org.pcj.Storage;
 
 /**
  *
@@ -21,14 +22,21 @@ public class InputFileReader {
 
     private final static Logger LOGGER = Logger.getLogger(InputFileReader.class.getName());
 
-    private int threadNo;
-    private final int[] readIndex;
+    @Storage(InputFileReader.class)
+    enum Shared {
+        readIndex
+    }
+
+    @SuppressWarnings("final")
+    private final int[] readIndex = new int[PCJ.threadCount()];
     private final int[] writeIndex;
+    private int threadNo;
 
     public InputFileReader() {
-        readIndex = new int[PCJ.threadCount()];
+        PCJ.registerStorage(Shared.class);
+
         Arrays.fill(readIndex, Configuration.SEQUENCES_BUFFER_SIZE - 1);
-        PCJ.putLocal(BlastRunner.Shared.readIndex, readIndex);
+        PCJ.putLocal(Shared.readIndex, readIndex);
 
         writeIndex = new int[PCJ.threadCount()];
 
@@ -68,7 +76,7 @@ public class InputFileReader {
         LOGGER.log(Level.FINE, "send to: {0}[{1}] >>> {2} ({3})",
                 new Object[]{threadNo, writeIndex[threadNo], value.substring(0, Math.min(value.length(), 40)), value.length()});
 
-        PCJ.put(value, threadNo, BlastRunner.Shared.values, writeIndex[threadNo]);
+        PCJ.put(value, threadNo, SequencesReceiverAndParser.Shared.values, writeIndex[threadNo]);
         writeIndex[threadNo] = (writeIndex[threadNo] + 1) % Configuration.SEQUENCES_BUFFER_SIZE;
     }
 
@@ -82,7 +90,7 @@ public class InputFileReader {
                     return;
                 }
             }
-            PCJ.waitFor(BlastRunner.Shared.readIndex);
+            PCJ.waitFor(InputFileReader.Shared.readIndex);
         }
     }
 
@@ -93,11 +101,11 @@ public class InputFileReader {
                 if (writeIndex[newThreadNo] != readIndex[newThreadNo]) {
                     break;
                 } else {
-                    PCJ.waitFor(BlastRunner.Shared.readIndex);
+                    PCJ.waitFor(InputFileReader.Shared.readIndex);
                 }
             }
 
-            PCJ.put(null, newThreadNo, BlastRunner.Shared.values, writeIndex[newThreadNo]);
+            PCJ.put(null, newThreadNo, SequencesReceiverAndParser.Shared.values, writeIndex[newThreadNo]);
         }
     }
 }
