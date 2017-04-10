@@ -108,14 +108,14 @@ public class SequencesReceiverAndParser {
     }
 
     private String receiveSequencesBlock() {
-        PCJ.waitFor("values");
+        PCJ.waitFor(BlastRunner.Shared.values);
         int index = blockNo % Configuration.SEQUENCES_BUFFER_SIZE;
-        return PCJ.getLocal("values", index);
+        return PCJ.getLocal(BlastRunner.Shared.values, index);
     }
 
     private void informAboutCompletion() {
         int index = blockNo % Configuration.SEQUENCES_BUFFER_SIZE;
-        PCJ.put(0, "readIndex", index, PCJ.myId());
+        PCJ.put(index, 0, BlastRunner.Shared.readIndex, PCJ.myId());
     }
 
     private void executeBlast(String value) throws InterruptedException, IOException, JAXBException, SAXException {

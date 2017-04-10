@@ -28,7 +28,7 @@ public class InputFileReader {
     public InputFileReader() {
         readIndex = new int[PCJ.threadCount()];
         Arrays.fill(readIndex, Configuration.SEQUENCES_BUFFER_SIZE - 1);
-        PCJ.putLocal("readIndex", readIndex);
+        PCJ.putLocal(BlastRunner.Shared.readIndex, readIndex);
 
         writeIndex = new int[PCJ.threadCount()];
 
@@ -68,7 +68,7 @@ public class InputFileReader {
         LOGGER.log(Level.FINE, "send to: {0}[{1}] >>> {2} ({3})",
                 new Object[]{threadNo, writeIndex[threadNo], value.substring(0, Math.min(value.length(), 40)), value.length()});
 
-        PCJ.put(threadNo, "values", value, writeIndex[threadNo]);
+        PCJ.put(value, threadNo, BlastRunner.Shared.values, writeIndex[threadNo]);
         writeIndex[threadNo] = (writeIndex[threadNo] + 1) % Configuration.SEQUENCES_BUFFER_SIZE;
     }
 
@@ -82,7 +82,7 @@ public class InputFileReader {
                     return;
                 }
             }
-            PCJ.waitFor("readIndex");
+            PCJ.waitFor(BlastRunner.Shared.readIndex);
         }
     }
 
@@ -93,11 +93,11 @@ public class InputFileReader {
                 if (writeIndex[newThreadNo] != readIndex[newThreadNo]) {
                     break;
                 } else {
-                    PCJ.waitFor("readIndex");
+                    PCJ.waitFor(BlastRunner.Shared.readIndex);
                 }
             }
 
-            PCJ.put(newThreadNo, "values", null, writeIndex[newThreadNo]);
+            PCJ.put(null, newThreadNo, BlastRunner.Shared.values, writeIndex[newThreadNo]);
         }
     }
 }

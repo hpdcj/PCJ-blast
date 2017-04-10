@@ -1,10 +1,12 @@
 package org.pcj.blast;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.pcj.NodesDescription;
 import org.pcj.PCJ;
 
 public class Main {
@@ -12,7 +14,7 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws Throwable {
+    public static void main(String[] args) throws IOException {
         setLoggerLevel(Level.FINE);
 
         if (args.length > 0) {
@@ -22,7 +24,7 @@ public class Main {
                 System.exit(1);
             }
 
-            PCJ.start(BlastRunner.class, BlastRunner.class, args[0]);
+            PCJ.start(BlastRunner.class, new NodesDescription(args[0]));
         } else {
             System.err.println("File with nodes description required as parameter!");
             System.exit(1);
