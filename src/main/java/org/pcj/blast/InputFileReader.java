@@ -41,6 +41,8 @@ public class InputFileReader {
         writeIndex = new int[PCJ.threadCount()];
 
         threadNo = 0;
+
+        PCJ.broadcast(BlastRunner.args, BlastRunner.Shared.args);
     }
 
     public void readInputFile(String filename) throws IOException {
@@ -48,7 +50,6 @@ public class InputFileReader {
             String line;
             StringBuilder sb = new StringBuilder();
             int seqNo = 0;
-//            for (int lineNo = 1; (line = br.readLine()) != null; ++lineNo) {
             while ((line = br.readLine()) != null) {
                 if (line.startsWith(">")) {
                     if (seqNo++ % (Configuration.SEQUENCES_BATCH_COUNT) == 0) {

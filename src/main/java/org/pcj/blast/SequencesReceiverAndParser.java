@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -53,19 +54,20 @@ public class SequencesReceiverAndParser {
         }
 
         // http://www.ncbi.nlm.nih.gov/books/NBK279675/
-        List<String> blastCommand = Arrays.asList(
-                Configuration.BLAST_BINARY_PATH,
-                "-word_size", "11",
-                "-gapopen", "0",
-                "-gapextend", "2",
-                "-penalty", "-1",
-                "-reward", "1",
-                "-max_target_seqs", "10",
-                "-evalue", "0.001",
-                "-show_gis",
-                "-outfmt", Integer.toString(outfmt),
-                "-num_threads", Integer.toString(Configuration.BLAST_THREADS_COUNT),
-                "-db", Configuration.BLAST_DB_PATH);
+        List<String> blastCommand = new ArrayList<>();
+        blastCommand.add(Configuration.BLAST_BINARY_PATH);
+
+        PCJ.waitFor(BlastRunner.Shared.args);
+        blastCommand.addAll(Arrays.asList(BlastRunner.args));
+
+        blastCommand.add("-outfmt");
+        blastCommand.add(Integer.toString(outfmt));
+
+        blastCommand.add("-num_threads");
+        blastCommand.add(Integer.toString(Configuration.BLAST_THREADS_COUNT));
+
+        blastCommand.add("-db");
+        blastCommand.add(Configuration.BLAST_DB_PATH);
 
         LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", blastCommand));
 

@@ -16,14 +16,15 @@ public class Configuration {
 
     private final static Logger LOGGER = Logger.getLogger(Configuration.class.getName());
 
-    final static public String INPUT_FILENAME;
-    final static public String OUTPUT_DIR;
-    final static public int OUTPUT_FORMAT;
-    final static public String BLAST_BINARY_PATH;
-    final static public String BLAST_DB_PATH;
-    final static public int SEQUENCES_BATCH_COUNT;
-    final static public int BLAST_THREADS_COUNT;
-    final static public int SEQUENCES_BUFFER_SIZE;
+    final public static String INPUT_FILENAME;
+    final public static String OUTPUT_DIR;
+    final public static int OUTPUT_FORMAT;
+    final public static String BLAST_BINARY_PATH;
+    final public static String BLAST_DB_PATH;
+    final public static int SEQUENCES_BATCH_COUNT;
+    final public static int BLAST_THREADS_COUNT;
+    final public static int SEQUENCES_BUFFER_SIZE;
+    final public static String NODES_FILENAME;
 
     static {
         SEQUENCES_BUFFER_SIZE = 1 + 1; // "+1" for one empty slot
@@ -55,11 +56,13 @@ public class Configuration {
         }
         OUTPUT_FORMAT = _outputFormat;
 
+        NODES_FILENAME = System.getProperty("nodes", "nodes.txt");
         INPUT_FILENAME = System.getProperty("input", "blast-test.fasta");
         OUTPUT_DIR = System.getProperty("output", ".");
         BLAST_DB_PATH = System.getProperty("db", "./dbs/nt");
         BLAST_BINARY_PATH = System.getProperty("blast", "blastn");
 
+        LOGGER.log(Level.CONFIG, "NODES_FILENAME = {0}", NODES_FILENAME);
         LOGGER.log(Level.CONFIG, "INPUT_FILENAME = {0}", INPUT_FILENAME);
         LOGGER.log(Level.CONFIG, "OUTPUT_DIR = {0}", OUTPUT_DIR);
         LOGGER.log(Level.CONFIG, "OUTPUT_FORMAT = {0}", OUTPUT_FORMAT);

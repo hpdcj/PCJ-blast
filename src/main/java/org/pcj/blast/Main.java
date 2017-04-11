@@ -17,20 +17,22 @@ public class Main {
     public static void main(String[] args) throws IOException {
         setLoggerLevel(Level.FINE);
 
-        if (args.length > 0) {
-            File sequenceFile = new File(Configuration.INPUT_FILENAME);
-            if (sequenceFile.isFile() == false) {
-                System.err.println("File with sequence does not exists: " + Configuration.INPUT_FILENAME);
-                System.exit(1);
-            }
-
-            PCJ.start(BlastRunner.class, new NodesDescription(args[0]));
-        } else {
-            System.err.println("File with nodes description required as parameter!");
+        File sequenceFile = new File(Configuration.INPUT_FILENAME);
+        if (sequenceFile.isFile() == false) {
+            System.err.println("File with sequence does not exists: " + Configuration.INPUT_FILENAME);
             System.exit(1);
         }
-    }
 
+        File nodesFile = new File(Configuration.NODES_FILENAME);
+        if (nodesFile.isFile() == false) {
+            System.err.println("Nodes description file does not exists: " + Configuration.NODES_FILENAME);
+            System.exit(1);
+        }
+
+        BlastRunner.args = args;
+        PCJ.start(BlastRunner.class, new NodesDescription(nodesFile));
+    }
+    
     private static void setLoggerLevel(Level level) throws SecurityException {
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setLevel(level);

@@ -1,13 +1,22 @@
 package org.pcj.blast;
 
 import org.pcj.PCJ;
+import org.pcj.RegisterStorage;
 import org.pcj.StartPoint;
+import org.pcj.Storage;
 
 /**
  *
  * @author faramir
  */
+@RegisterStorage(BlastRunner.Shared.class)
 public class BlastRunner implements StartPoint {
+
+    @Storage(BlastRunner.class)
+    enum Shared {
+        args
+    }
+    public static String[] args;
 
     @SuppressWarnings("method")
     @Override
