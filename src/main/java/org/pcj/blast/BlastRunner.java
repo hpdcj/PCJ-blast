@@ -41,6 +41,7 @@ public class BlastRunner implements StartPoint {
     enum Shared {
         args
     }
+    @SuppressWarnings("static")
     public static String[] args;
 
     @SuppressWarnings("method")
