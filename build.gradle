@@ -5,6 +5,13 @@ sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 //compileJava.options.compilerArgs.add '-Xlint:unchecked'
 
+repositories {
+}
+
+dependencies {
+    compile files('../PCJ-ant/dist/PCJ-ant.jar')
+}
+
 jaxb {    
     inputs.file "src/main/resources/dtd/NCBI_BlastOutput.dtd!ncbi.blast.result.generated"
     outputs.dir "${buildDir}/generated-src/"
@@ -18,28 +25,17 @@ compileJava {
 sourceSets {
     main {
         java {
-            srcDirs += [file('build/generated-src/')]
+            srcDirs += [file("${buildDir}/generated-src/")]
         }
     }
 }
-
-//sourceSets {
-//    main {
-//        java {
-////            srcDir file('${buildDir}/generated-src/')
-//            compileClasspath += '${buildDir}/generated-src/'
-//        }
-//    }
-//}
-
 
 if (!hasProperty('mainClass')) {
     ext.mainClass = 'org.pcj.blast.Main'
 }
 
-repositories {
-}
-
-dependencies {
-    compile files('../PCJ-ant/dist/PCJ-ant.jar')
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.pcj.blast.Main'
+    }
 }
