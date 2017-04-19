@@ -33,9 +33,3 @@ sourceSets {
 if (!hasProperty('mainClass')) {
     ext.mainClass = 'org.pcj.blast.Main'
 }
-
-jar {
-    manifest {
-        attributes 'Main-Class': 'org.pcj.blast.Main'
-    }
-}
