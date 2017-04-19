@@ -43,15 +43,11 @@ public class SequencesReceiverAndParser {
     private int blockNo;
     private final ProcessBuilder blastProcessBuiler;
     private final BlastXmlParser blastXmlParser;
+    private final boolean hasOutputFormat;
 
     public SequencesReceiverAndParser() throws IOException {
         PCJ.registerStorage(Shared.class);
         blockNo = 0;
-
-        int outfmt = 5;
-        if (Configuration.OUTPUT_FORMAT >= 0) {
-            outfmt = Configuration.OUTPUT_FORMAT;
-        }
 
         // http://www.ncbi.nlm.nih.gov/books/NBK279675/
         List<String> blastCommand = new ArrayList<>();
@@ -60,21 +56,21 @@ public class SequencesReceiverAndParser {
         PCJ.waitFor(BlastRunner.Shared.args);
         blastCommand.addAll(Arrays.asList(BlastRunner.args));
 
-        blastCommand.add("-outfmt");
-        blastCommand.add(Integer.toString(outfmt));
+        hasOutputFormat = Arrays.asList(BlastRunner.args).contains("-outfmt");
+        if (!hasOutputFormat) {
+            blastCommand.add("-outfmt");
+            blastCommand.add("5");
+        }
 
         blastCommand.add("-num_threads");
         blastCommand.add(Integer.toString(Configuration.BLAST_THREADS_COUNT));
-
-        blastCommand.add("-db");
-        blastCommand.add(Configuration.BLAST_DB_PATH);
 
         LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", blastCommand));
 
         blastProcessBuiler = new ProcessBuilder(blastCommand);
         blastProcessBuiler.redirectError(ProcessBuilder.Redirect.INHERIT);
 
-        if (Configuration.OUTPUT_FORMAT >= 0) {
+        if (hasOutputFormat) {
             blastProcessBuiler.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(
                     String.format("%s%c%d.blastOutput", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
 
@@ -137,7 +133,7 @@ public class SequencesReceiverAndParser {
         LOGGER.log(Level.FINE, "{0}: BLAST started", PCJ.myId());
 
         Thread xmlParserThread = null;
-        if (Configuration.OUTPUT_FORMAT < 0) {
+        if (!hasOutputFormat) {
             xmlParserThread = new Thread(
                     () -> {
                         try (InputStream inputStream = new BufferedInputStream(process.getInputStream())) {
