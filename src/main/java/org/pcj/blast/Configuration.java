@@ -68,11 +68,11 @@ public class Configuration {
         OUTPUT_DIR = System.getProperty("output", ".");
         BLAST_BINARY_PATH = System.getProperty("blast", "blastn");
 
-        LOGGER.log(Level.CONFIG, "NODES_FILENAME = {0}", NODES_FILENAME);
-        LOGGER.log(Level.CONFIG, "INPUT_FILENAME = {0}", INPUT_FILENAME);
-        LOGGER.log(Level.CONFIG, "OUTPUT_DIR = {0}", OUTPUT_DIR);
-        LOGGER.log(Level.CONFIG, "BLAST_BINARY_PATH = {0}", BLAST_BINARY_PATH);
-        LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT = {0}", SEQUENCES_BATCH_COUNT);
-        LOGGER.log(Level.CONFIG, "BLAST_THREADS_COUNT = {0}", BLAST_THREADS_COUNT);
+        LOGGER.log(Level.CONFIG, "NODES_FILENAME (-Dnodes=<path>) = {0}", NODES_FILENAME);
+        LOGGER.log(Level.CONFIG, "INPUT_FILENAME (-Dinput=<path>) = {0}", INPUT_FILENAME);
+        LOGGER.log(Level.CONFIG, "OUTPUT_DIR (-Doutput=<path>) = {0}", OUTPUT_DIR);
+        LOGGER.log(Level.CONFIG, "BLAST_BINARY_PATH (-Dblast=<path>) = {0}", BLAST_BINARY_PATH);
+        LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT (-DsequenceCount=<int>) = {0}", SEQUENCES_BATCH_COUNT);
+        LOGGER.log(Level.CONFIG, "BLAST_THREADS_COUNT (-DblastThreads=<int>) = {0}", BLAST_THREADS_COUNT);
     }
 }
