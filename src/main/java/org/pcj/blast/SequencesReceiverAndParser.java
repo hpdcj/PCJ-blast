@@ -66,7 +66,7 @@ public class SequencesReceiverAndParser {
     private final boolean hasOutputFormat;
 
     public SequencesReceiverAndParser() throws IOException {
-        PCJ.registerStorage(Shared.class);
+        PCJ.registerStorage(Shared.class, this);
         blockNo = 0;
 
         // http://www.ncbi.nlm.nih.gov/books/NBK279675/
