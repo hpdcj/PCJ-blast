@@ -38,7 +38,7 @@ import org.pcj.PCJ;
  *
  * @author Marek Nowicki
  */
-public class Main {
+public class MainWithDeploy {
 
     public static void main(String[] args) throws IOException {
         setLoggerLevel(Level.FINE);
@@ -56,9 +56,9 @@ public class Main {
         }
 
         BlastRunner.args = args;
-        PCJ.start(BlastRunner.class, new NodesDescription(nodesFile));
+        PCJ.deploy(BlastRunner.class, new NodesDescription(nodesFile));
     }
-    
+
     private static void setLoggerLevel(Level level) throws SecurityException {
         Handler consoleHandler = new ConsoleHandler();
         consoleHandler.setLevel(level);
