@@ -26,8 +26,13 @@
 package org.pcj.blast;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +46,24 @@ import org.pcj.Storage;
 public class InputFileReader {
 
     private final static Logger LOGGER = Logger.getLogger(InputFileReader.class.getName());
+
+    private Reader openInputReader(String inputPath) throws FileNotFoundException, IOException {
+        URI uri = URI.create(inputPath);
+        if ("hdfs".equals(uri.getScheme())) {
+            org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
+            Arrays.stream(Configuration.HDFS_CONFIGURATIONS)
+                    .map(org.apache.hadoop.fs.Path::new)
+                    .forEach(conf::addResource);
+            org.apache.hadoop.fs.FileSystem fileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
+
+            return new InputStreamReader(
+                    fileSystem.open(new org.apache.hadoop.fs.Path(uri.getPath()))
+                            .getWrappedStream(),
+                    StandardCharsets.UTF_8);
+        } else {
+            return new FileReader(inputPath);
+        }
+    }
 
     @Storage(InputFileReader.class)
     enum Shared {
@@ -65,8 +88,8 @@ public class InputFileReader {
         PCJ.broadcast(BlastRunner.args, BlastRunner.Shared.args);
     }
 
-    public void readInputFile(String filename) throws IOException {
-        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+    public void readInputFile(String inputPath) throws IOException {
+        try (BufferedReader br = new BufferedReader(openInputReader(inputPath))) {
             String line;
             StringBuilder sb = new StringBuilder();
             int seqNo = 0;

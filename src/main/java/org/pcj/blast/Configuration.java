@@ -25,8 +25,10 @@
  */
 package org.pcj.blast;
 
+import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -43,6 +45,7 @@ public class Configuration {
     final public static int BLAST_THREADS_COUNT;
     final public static int SEQUENCES_BUFFER_SIZE;
     final public static String NODES_FILENAME;
+    final public static String[] HDFS_CONFIGURATIONS;
 
     static {
         SEQUENCES_BUFFER_SIZE = 1 + 1; // "+1" for one empty slot
@@ -67,11 +70,13 @@ public class Configuration {
         INPUT_FILENAME = System.getProperty("input", "blast-test.fasta");
         OUTPUT_DIR = System.getProperty("output", ".");
         BLAST_BINARY_PATH = System.getProperty("blast", "blastn");
+        HDFS_CONFIGURATIONS = System.getProperty("hdsfConf", "").split(Pattern.quote(File.pathSeparator));
 
         LOGGER.log(Level.CONFIG, "NODES_FILENAME (-Dnodes=<path>) = {0}", NODES_FILENAME);
         LOGGER.log(Level.CONFIG, "INPUT_FILENAME (-Dinput=<path>) = {0}", INPUT_FILENAME);
         LOGGER.log(Level.CONFIG, "OUTPUT_DIR (-Doutput=<path>) = {0}", OUTPUT_DIR);
         LOGGER.log(Level.CONFIG, "BLAST_BINARY_PATH (-Dblast=<path>) = {0}", BLAST_BINARY_PATH);
+        LOGGER.log(Level.CONFIG, "HDFS_CONFIGURATIONS (-DhdfsConf=<path>[{1}<path>...]) = {0}", new Object[]{HDFS_CONFIGURATIONS, File.pathSeparator});
         LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT (-DsequenceCount=<int>) = {0}", SEQUENCES_BATCH_COUNT);
         LOGGER.log(Level.CONFIG, "BLAST_THREADS_COUNT (-DblastThreads=<int>) = {0}", BLAST_THREADS_COUNT);
     }
