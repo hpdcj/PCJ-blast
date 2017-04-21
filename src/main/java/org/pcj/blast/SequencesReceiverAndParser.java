@@ -122,7 +122,11 @@ public class SequencesReceiverAndParser {
                 LOGGER.log(Level.FINE, "{0}: received: {1} ({2})",
                         new Object[]{PCJ.myId(), value.substring(0, Math.min(value.length(), 40)), value.length()});
 
-                executeBlast(value);
+                try {
+                    executeBlast(value);
+                } catch (IOException | InterruptedException ex) {
+                    LOGGER.log(Level.SEVERE, "Exception while executing BLAST.", ex);
+                }
 
                 informAboutCompletion();
 
@@ -146,7 +150,7 @@ public class SequencesReceiverAndParser {
         PCJ.put(index, 0, InputFileReader.Shared.readIndex, PCJ.myId());
     }
 
-    private void executeBlast(String value) throws InterruptedException, IOException, JAXBException, SAXException {
+    private void executeBlast(String value) throws IOException, InterruptedException {
         long startTime = System.nanoTime();
 
         Process process = blastProcessBuiler.start();
