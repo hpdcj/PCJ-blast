@@ -5,10 +5,6 @@ sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 //compileJava.options.compilerArgs.add '-Xlint:unchecked'
 
-configurations.all {
-    transitive = false
-}
-
 repositories {
     mavenCentral()
     maven {
@@ -19,9 +15,15 @@ repositories {
 
 dependencies {
     compile files('../PCJ-ant/dist/PCJ-ant.jar')
-    compile "org.apache.hadoop:hadoop-core:2.6.0-mr1-cdh5.10.1"
-    compile "org.apache.hadoop:hadoop-common:2.6.0-cdh5.10.1"
-    compile "org.apache.hadoop:hadoop-hdfs:2.6.0-cdh5.10.1"
+    compile (group: 'org.apache.hadoop', name: 'hadoop-core', version: '2.6.0-mr1-cdh5.10.1') {
+        transitive = false
+    }
+    compile (group: 'org.apache.hadoop', name: 'hadoop-common', version: '2.6.0-cdh5.10.1') {
+        transitive = false
+    }
+    compile (group: 'org.apache.hadoop', name: 'hadoop-hdfs', version: '2.6.0-cdh5.10.1') {
+        transitive = false
+    }
 }
 
 tasks.withType(Jar) {
