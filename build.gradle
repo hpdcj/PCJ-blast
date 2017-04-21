@@ -5,11 +5,27 @@ sourceCompatibility = '1.8'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 //compileJava.options.compilerArgs.add '-Xlint:unchecked'
 
+configurations.all {
+    transitive = false
+}
+
 repositories {
+    mavenCentral()
+    maven {
+        url 'https://repository.cloudera.com/content/repositories/releases/'
+        url 'https://repository.cloudera.com/cloudera/cloudera-repos'
+    }
 }
 
 dependencies {
     compile files('../PCJ-ant/dist/PCJ-ant.jar')
+    compile "org.apache.hadoop:hadoop-core:2.6.0-mr1-cdh5.10.1"
+    compile "org.apache.hadoop:hadoop-common:2.6.0-cdh5.10.1"
+    compile "org.apache.hadoop:hadoop-hdfs:2.6.0-cdh5.10.1"
+}
+
+tasks.withType(Jar) {
+    destinationDir = file("${buildDir}/dist")
 }
 
 jaxb {    
@@ -32,4 +48,19 @@ sourceSets {
 
 if (!hasProperty('mainClass')) {
     ext.mainClass = 'org.pcj.blast.Main'
+}
+
+task copyToLib(type: Copy) {
+    into "${buildDir}/dist/libs"
+    from configurations.runtime
+}
+
+build.dependsOn(copyToLib)
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': project.name,
+                   'Main-Class': 'org.pcj.blast.Main',
+                   'Class-Path': configurations.runtime.files.collect { "libs/$it.name" }.join(' ')
+    }
 }
