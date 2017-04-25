@@ -25,6 +25,10 @@
  */
 package org.pcj.blast;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.pcj.PCJ;
 import org.pcj.RegisterStorage;
 import org.pcj.StartPoint;
@@ -47,6 +51,8 @@ public class BlastRunner implements StartPoint {
     @SuppressWarnings("method")
     @Override
     public void main() throws Throwable {
+        setLoggerLevel(Level.FINE);
+
         if (PCJ.threadCount() < 2) {
             System.err.println("At least two PCJ threads is required!");
             System.exit(1);
@@ -61,4 +67,12 @@ public class BlastRunner implements StartPoint {
         }
     }
 
+    private static void setLoggerLevel(Level level) throws SecurityException {
+        Handler consoleHandler = new ConsoleHandler();
+        consoleHandler.setLevel(level);
+
+        Logger logger = Logger.getLogger("");
+        logger.addHandler(consoleHandler);
+        logger.setLevel(level);
+    }
 }

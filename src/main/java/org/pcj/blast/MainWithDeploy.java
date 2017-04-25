@@ -41,8 +41,6 @@ import org.pcj.PCJ;
 public class MainWithDeploy {
 
     public static void main(String[] args) throws IOException {
-        setLoggerLevel(Level.FINE);
-
         File sequenceFile = new File(Configuration.INPUT_FILENAME);
         if (sequenceFile.isFile() == false) {
             System.err.println("File with sequence does not exists: " + Configuration.INPUT_FILENAME);
@@ -57,14 +55,5 @@ public class MainWithDeploy {
 
         BlastRunner.args = args;
         PCJ.deploy(BlastRunner.class, new NodesDescription(nodesFile));
-    }
-
-    private static void setLoggerLevel(Level level) throws SecurityException {
-        Handler consoleHandler = new ConsoleHandler();
-        consoleHandler.setLevel(level);
-
-        Logger logger = Logger.getLogger("");
-        logger.addHandler(consoleHandler);
-        logger.setLevel(level);
     }
 }
