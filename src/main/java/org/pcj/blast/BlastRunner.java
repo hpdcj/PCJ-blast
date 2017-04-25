@@ -51,8 +51,6 @@ public class BlastRunner implements StartPoint {
     @SuppressWarnings("method")
     @Override
     public void main() throws Throwable {
-        setLoggerLevel(Level.FINE);
-
         if (PCJ.threadCount() < 2) {
             System.err.println("At least two PCJ threads is required!");
             System.exit(1);
@@ -60,19 +58,12 @@ public class BlastRunner implements StartPoint {
 
         if (PCJ.myId() == 0) {
             InputFileReader inputFileReader = new InputFileReader();
+            PCJ.barrier();
             inputFileReader.readInputFile(Configuration.INPUT_FILENAME);
         } else {
             SequencesReceiverAndParser sequenceReceiverAndParser = new SequencesReceiverAndParser();
+            PCJ.barrier();
             sequenceReceiverAndParser.receiveAndParseSequences();
         }
-    }
-
-    private static void setLoggerLevel(Level level) throws SecurityException {
-        Handler consoleHandler = new ConsoleHandler();
-        consoleHandler.setLevel(level);
-
-        Logger logger = Logger.getLogger("");
-        logger.addHandler(consoleHandler);
-        logger.setLevel(level);
     }
 }

@@ -27,10 +27,6 @@ package org.pcj.blast;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.pcj.NodesDescription;
 import org.pcj.PCJ;
 
@@ -41,12 +37,6 @@ import org.pcj.PCJ;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        File sequenceFile = new File(Configuration.INPUT_FILENAME);
-        if (sequenceFile.isFile() == false) {
-            System.err.println("File with sequence does not exists: " + Configuration.INPUT_FILENAME);
-            System.exit(1);
-        }
-
         File nodesFile = new File(Configuration.NODES_FILENAME);
         if (nodesFile.isFile() == false) {
             System.err.println("Nodes description file does not exists: " + Configuration.NODES_FILENAME);
