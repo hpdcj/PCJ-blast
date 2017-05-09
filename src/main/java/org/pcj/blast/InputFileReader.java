@@ -79,7 +79,7 @@ public class InputFileReader {
         PCJ.registerStorage(Shared.class, this);
 
         Arrays.fill(readIndex, Configuration.SEQUENCES_BUFFER_SIZE - 1);
-        PCJ.putLocal(Shared.readIndex, readIndex);
+        PCJ.putLocal(readIndex, Shared.readIndex);
 
         writeIndex = new int[PCJ.threadCount()];
 
