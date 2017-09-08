@@ -34,6 +34,7 @@ import java.io.Reader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.pcj.PCJ;
@@ -52,6 +53,7 @@ public class InputFileReader {
         if ("hdfs".equals(uri.getScheme())) {
             org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
             Arrays.stream(Configuration.HDFS_CONFIGURATIONS)
+                    .filter(((Predicate<String>) String::isEmpty).negate())
                     .map(org.apache.hadoop.fs.Path::new)
                     .forEach(conf::addResource);
             org.apache.hadoop.fs.FileSystem fileSystem = org.apache.hadoop.fs.FileSystem.get(conf);

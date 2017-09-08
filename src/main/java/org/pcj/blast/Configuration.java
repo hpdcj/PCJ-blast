@@ -70,7 +70,9 @@ public class Configuration {
         INPUT_FILENAME = System.getProperty("input", "blast-test.fasta");
         OUTPUT_DIR = System.getProperty("output", ".");
         BLAST_BINARY_PATH = System.getProperty("blast", "blastn");
-        HDFS_CONFIGURATIONS = System.getProperty("hdsfConf", "").split(Pattern.quote(File.pathSeparator));
+
+        String hdfs_configurations = System.getProperty("hdsfConf", "");
+        HDFS_CONFIGURATIONS = hdfs_configurations.isEmpty() ? new String[0] : hdfs_configurations.split(Pattern.quote(File.pathSeparator));
 
         LOGGER.log(Level.CONFIG, "NODES_FILENAME (-Dnodes=<path>) = {0}", NODES_FILENAME);
         LOGGER.log(Level.CONFIG, "INPUT_FILENAME (-Dinput=<path>) = {0}", INPUT_FILENAME);
