@@ -111,6 +111,8 @@ public class InputFileReader {
             if (sb.length() > 0) {
                 sendSequences(sb.toString());
             }
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, "Error reading file.", ex);
         }
 
         sendEndOfSequences();
