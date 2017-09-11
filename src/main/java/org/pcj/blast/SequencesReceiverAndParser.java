@@ -41,6 +41,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,6 +50,8 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.pcj.PCJ;
 import org.pcj.Storage;
 import org.xml.sax.SAXException;
@@ -60,22 +64,40 @@ public class SequencesReceiverAndParser {
 
     private final static Logger LOGGER = Logger.getLogger(SequencesReceiverAndParser.class.getName());
 
-    private Writer openOutputWriter(String outputPath) throws IOException {
+    private FileSystem getHadoopFileSystem() throws IOException {
+        org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
+        Arrays.stream(Configuration.HDFS_CONFIGURATIONS)
+                .filter(((Predicate<String>) String::isEmpty).negate())
+                .map(org.apache.hadoop.fs.Path::new)
+                .forEach(conf::addResource);
+        org.apache.hadoop.fs.FileSystem fileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
+        return fileSystem;
+    }
+
+    private void createDir(String outputPath) throws IOException {
         URI uri = URI.create(outputPath);
         if ("hdfs".equals(uri.getScheme())) {
-            org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration();
-            Arrays.stream(Configuration.HDFS_CONFIGURATIONS)
-                    .filter(((Predicate<String>) String::isEmpty).negate())
-                    .map(org.apache.hadoop.fs.Path::new)
-                    .forEach(conf::addResource);
-            org.apache.hadoop.fs.FileSystem fileSystem = org.apache.hadoop.fs.FileSystem.get(conf);
+            FileSystem fileSystem = getHadoopFileSystem();
+            Path path = new org.apache.hadoop.fs.Path(uri.getPath());
+
+            fileSystem.mkdirs(path);
+        } else {
+            new File(outputPath).mkdirs();
+        }
+
+    }
+
+    private Writer openOutputWriter(String outputFile) throws IOException {
+        URI uri = URI.create(outputFile);
+        if ("hdfs".equals(uri.getScheme())) {
+            FileSystem fileSystem = getHadoopFileSystem();
+            Path path = new org.apache.hadoop.fs.Path(uri.getPath());
 
             return new OutputStreamWriter(
-                    fileSystem.append(new org.apache.hadoop.fs.Path(uri.getPath()))
-                            .getWrappedStream(),
+                    fileSystem.create(path).getWrappedStream(),
                     StandardCharsets.UTF_8);
         } else {
-            return new FileWriter(outputPath);
+            return new FileWriter(outputFile);
         }
     }
 
@@ -119,14 +141,23 @@ public class SequencesReceiverAndParser {
         blastProcessBuiler.redirectError(ProcessBuilder.Redirect.INHERIT);
 
         if (hasOutputFormat) {
-            String outputPath = String.format("%s%c%d.blastOutput", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId());
-//            blastProcessBuiler.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(outputPath)));
+            createDir(Configuration.OUTPUT_DIR);
 
-            this.outputDataWriter = new BufferedWriter(openOutputWriter(outputPath));
+            this.outputDataWriter = new BufferedWriter(
+                    openOutputWriter(String.format("%s%c%d.blastOutput",
+                            Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId())));
+            
             this.blastXmlParser = null;
         } else {
-            PrintWriter localWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
-            PrintWriter globalWriter = new PrintWriter(new BufferedWriter(new FileWriter(String.format("%s%c%d.txtGlobalResultFile", Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
+            createDir(Configuration.OUTPUT_DIR);
+
+            PrintWriter localWriter = new PrintWriter(new BufferedWriter(
+                    openOutputWriter(String.format("%s%c%d.txtResultFile",
+                            Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
+            
+            PrintWriter globalWriter = new PrintWriter(new BufferedWriter(
+                    openOutputWriter(String.format("%s%c%d.txtGlobalResultFile",
+                            Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
 
             BlastXmlParser xmlParser = null;
             try {
@@ -135,6 +166,7 @@ public class SequencesReceiverAndParser {
                 LOGGER.log(Level.SEVERE, "Exception while creating BlastXmlParser", ex);
             }
             this.blastXmlParser = xmlParser;
+            
             this.outputDataWriter = null;
         }
     }
