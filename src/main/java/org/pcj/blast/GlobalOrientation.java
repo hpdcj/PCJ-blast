@@ -45,7 +45,7 @@ public enum GlobalOrientation {
             case INVERTED:
                 return "Inverted";
             default:
-                return null;
+                return "unknown";
         }
     }
 
