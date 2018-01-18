@@ -86,8 +86,6 @@ public class InputFileReader {
         writeIndex = new int[PCJ.threadCount()];
 
         threadNo = 0;
-
-        PCJ.broadcast(BlastRunner.args, BlastRunner.Shared.args);
     }
 
     public void readInputFile(String inputPath) throws IOException {

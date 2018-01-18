@@ -53,6 +53,8 @@ public class BlastRunner implements StartPoint {
         }
 
         if (PCJ.myId() == 0) {
+            PCJ.broadcast(BlastRunner.args, BlastRunner.Shared.args);
+
             InputFileReader inputFileReader = new InputFileReader();
             PCJ.barrier();
             inputFileReader.readInputFile(Configuration.INPUT_FILENAME);

@@ -88,7 +88,7 @@ public class SequencesReceiverAndParser {
     }
 
     private Writer openOutputWriter(String outputFile) throws IOException {
-        URI uri = URI.create(outputFile);
+        URI uri = new File(outputFile).toURI();
         if ("hdfs".equals(uri.getScheme())) {
             FileSystem fileSystem = getHadoopFileSystem();
             Path path = new org.apache.hadoop.fs.Path(uri.getPath());
@@ -134,6 +134,9 @@ public class SequencesReceiverAndParser {
 
         blastCommand.add("-num_threads");
         blastCommand.add(Integer.toString(Configuration.BLAST_THREADS_COUNT));
+        
+        blastCommand.add("-db");
+        blastCommand.add(Configuration.BLAST_DB_PATH);
 
         LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", blastCommand));
 

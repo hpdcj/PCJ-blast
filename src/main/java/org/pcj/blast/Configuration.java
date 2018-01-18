@@ -41,6 +41,7 @@ public class Configuration {
     final public static String INPUT_FILENAME;
     final public static String OUTPUT_DIR;
     final public static String BLAST_BINARY_PATH;
+    final public static String BLAST_DB_PATH;
     final public static int SEQUENCES_BATCH_COUNT;
     final public static int BLAST_THREADS_COUNT;
     final public static int SEQUENCES_BUFFER_SIZE;
@@ -70,6 +71,7 @@ public class Configuration {
         INPUT_FILENAME = System.getProperty("input", "blast-test.fasta");
         OUTPUT_DIR = System.getProperty("output", ".");
         BLAST_BINARY_PATH = System.getProperty("blast", "blastn");
+        BLAST_DB_PATH = System.getProperty("blastDb", "nt");
 
         String hdfs_configurations = System.getProperty("hdsfConf", "");
         HDFS_CONFIGURATIONS = hdfs_configurations.isEmpty() ? new String[0] : hdfs_configurations.split(Pattern.quote(File.pathSeparator));
@@ -78,6 +80,7 @@ public class Configuration {
         LOGGER.log(Level.CONFIG, "INPUT_FILENAME (-Dinput=<path>) = {0}", INPUT_FILENAME);
         LOGGER.log(Level.CONFIG, "OUTPUT_DIR (-Doutput=<path>) = {0}", OUTPUT_DIR);
         LOGGER.log(Level.CONFIG, "BLAST_BINARY_PATH (-Dblast=<path>) = {0}", BLAST_BINARY_PATH);
+        LOGGER.log(Level.CONFIG, "BLAST_DB_PATH (-DblastDb=<path>) = {0}", BLAST_DB_PATH);
         LOGGER.log(Level.CONFIG, "HDFS_CONFIGURATIONS (-DhdfsConf=<path>[{1}<path>...]) = {0}", new Object[]{HDFS_CONFIGURATIONS, File.pathSeparator});
         LOGGER.log(Level.CONFIG, "SEQUENCES_BATCH_COUNT (-DsequenceCount=<int>) = {0}", SEQUENCES_BATCH_COUNT);
         LOGGER.log(Level.CONFIG, "BLAST_THREADS_COUNT (-DblastThreads=<int>) = {0}", BLAST_THREADS_COUNT);
