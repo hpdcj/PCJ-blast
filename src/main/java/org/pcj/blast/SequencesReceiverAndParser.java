@@ -124,19 +124,24 @@ public class SequencesReceiverAndParser {
         blastCommand.add(Configuration.BLAST_BINARY_PATH);
 
         PCJ.waitFor(BlastRunner.Shared.args);
-        blastCommand.addAll(Arrays.asList(BlastRunner.args));
+        List<String> argsAsList = Arrays.asList(BlastRunner.args);
+        blastCommand.addAll(argsAsList);
 
-        hasOutputFormat = Arrays.asList(BlastRunner.args).contains("-outfmt");
+        hasOutputFormat = argsAsList.contains("-outfmt");
         if (!hasOutputFormat) {
             blastCommand.add("-outfmt");
             blastCommand.add("5");
         }
 
-        blastCommand.add("-num_threads");
-        blastCommand.add(Integer.toString(Configuration.BLAST_THREADS_COUNT));
-        
-        blastCommand.add("-db");
-        blastCommand.add(Configuration.BLAST_DB_PATH);
+        if (!argsAsList.contains("-num_threads")) {
+            blastCommand.add("-num_threads");
+            blastCommand.add(Integer.toString(Configuration.BLAST_THREADS_COUNT));
+        }
+
+        if (!argsAsList.contains("-db")) {
+            blastCommand.add("-db");
+            blastCommand.add(Configuration.BLAST_DB_PATH);
+        }
 
         LOGGER.log(Level.FINE, "Blast command: ''{0}''", String.join("' '", blastCommand));
 
@@ -149,7 +154,7 @@ public class SequencesReceiverAndParser {
             this.outputDataWriter = new BufferedWriter(
                     openOutputWriter(String.format("%s%c%d.blastOutput",
                             Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId())));
-            
+
             this.blastXmlParser = null;
         } else {
             createDir(Configuration.OUTPUT_DIR);
@@ -157,7 +162,7 @@ public class SequencesReceiverAndParser {
             PrintWriter localWriter = new PrintWriter(new BufferedWriter(
                     openOutputWriter(String.format("%s%c%d.txtResultFile",
                             Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
-            
+
             PrintWriter globalWriter = new PrintWriter(new BufferedWriter(
                     openOutputWriter(String.format("%s%c%d.txtGlobalResultFile",
                             Configuration.OUTPUT_DIR, File.separatorChar, PCJ.myId()))));
@@ -169,7 +174,7 @@ public class SequencesReceiverAndParser {
                 LOGGER.log(Level.SEVERE, "Exception while creating BlastXmlParser", ex);
             }
             this.blastXmlParser = xmlParser;
-            
+
             this.outputDataWriter = null;
         }
     }
