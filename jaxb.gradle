@@ -13,6 +13,7 @@ dependencies {
 }
 
 task jaxb {
+    ext.packageName = "jaxb.generated";
     doLast {
         def outputDir = outputs.files.find { file ->  !file.isFile() }
         outputDir.exists() || outputDir.mkdirs()
@@ -21,32 +22,19 @@ task jaxb {
         ant.outputDir=outputDir
 
         inputs.files.each { input ->
-            def fileName
-            def packageName
+            def fileName = input.toString()
             def language
-            
-            def inputStr = input.toString()
-            def index = inputStr.indexOf("!")
-            if (index==-1) {
-                fileName = inputStr
-                packageName = "jaxb.generated"
-            } else {
-                fileName = inputStr.substring(0, index)
-                packageName = inputStr.substring(index+1)
-            }
-            switch (fileName.substring(fileName.lastIndexOf(".")+1).toLowerCase()) {
-                case "dtd":
+
+            switch (fileName.substring(fileName.lastIndexOf(".")).toLowerCase()) {
+                case ".dtd":
                     language = "DTD"
                     break
-                case "xsd":
-                    language = "XMLSCHEMA"
-                    break
-                //RELAXNG,
-                //RELAXNG_COMPACT,
-                case "wsdl":
+                case ".wsdl":
                     language = "WSDL"
                     break
-                default: language = "XMLSCHEMA"
+                case ".xsd":
+                default:
+                    language = "XMLSCHEMA"
             }
             ant.xjc(
                 schema: fileName,

@@ -7,10 +7,8 @@ sourceCompatibility = '1.8'
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://repository.cloudera.com/content/repositories/releases/'
-        url 'https://repository.cloudera.com/cloudera/cloudera-repos'
-    }
+    maven { url 'https://repository.cloudera.com/content/repositories/releases/' }
+    maven { url 'https://repository.cloudera.com/cloudera/cloudera-repos' }
 }
 
 dependencies {
@@ -24,15 +22,18 @@ dependencies {
     compile (group: 'org.apache.hadoop', name: 'hadoop-hdfs', version: '2.6.0-cdh5.10.1') {
         transitive = false
     }
+    annotationProcessor files('../PCJ-libs/PCJ-5.0.6.jar')
 }
 
 tasks.withType(Jar) {
     destinationDir = file("${buildDir}/dist")
 }
 
-jaxb {    
-    inputs.file "src/main/resources/dtd/NCBI_BlastOutput.dtd!ncbi.blast.result.generated"
+jaxb {
+    inputs.file "src/main/resources/dtd/NCBI_BlastOutput.dtd"
     outputs.dir "${buildDir}/generated-src/"
+
+    packageName = "ncbi.blast.result.generated"
 }
     
 compileJava {
