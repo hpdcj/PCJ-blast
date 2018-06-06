@@ -25,10 +25,6 @@ dependencies {
     annotationProcessor files('../PCJ-libs/PCJ-5.0.6.jar')
 }
 
-tasks.withType(Jar) {
-    destinationDir = file("${buildDir}/dist")
-}
-
 jaxb {
     inputs.file "src/main/resources/dtd/NCBI_BlastOutput.dtd"
     outputs.dir "${buildDir}/generated-src/"
@@ -53,12 +49,16 @@ if (!hasProperty('mainClass')) {
     ext.mainClass = 'org.pcj.blast.Main'
 }
 
+tasks.withType(Jar) {
+    destinationDir = file("${buildDir}/dist")
+}
+
 task copyToLib(type: Copy) {
     into "${buildDir}/dist/libs"
     from configurations.runtime
 }
 
-build.dependsOn(copyToLib)
+jar.dependsOn(copyToLib)
 
 jar {
     manifest {
