@@ -42,7 +42,7 @@ public class BlastRunner implements StartPoint {
         args
     }
     @SuppressWarnings("static")
-    protected static String[] args;
+    public static String[] args;
 
     @SuppressWarnings("method")
     @Override
