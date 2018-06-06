@@ -13,13 +13,13 @@ repositories {
 
 dependencies {
     compile files('../PCJ-libs/PCJ-5.0.6.jar')
-    compile (group: 'org.apache.hadoop', name: 'hadoop-core', version: '2.6.0-mr1-cdh5.10.1') {
+    compile(group: 'org.apache.hadoop', name: 'hadoop-core', version: '2.6.0-mr1-cdh5.10.1') {
         transitive = false
     }
-    compile (group: 'org.apache.hadoop', name: 'hadoop-common', version: '2.6.0-cdh5.10.1') {
+    compile(group: 'org.apache.hadoop', name: 'hadoop-common', version: '2.6.0-cdh5.10.1') {
         transitive = false
     }
-    compile (group: 'org.apache.hadoop', name: 'hadoop-hdfs', version: '2.6.0-cdh5.10.1') {
+    compile(group: 'org.apache.hadoop', name: 'hadoop-hdfs', version: '2.6.0-cdh5.10.1') {
         transitive = false
     }
     annotationProcessor files('../PCJ-libs/PCJ-5.0.6.jar')
@@ -31,7 +31,7 @@ jaxb {
 
     packageName = "ncbi.blast.result.generated"
 }
-    
+
 compileJava {
     dependsOn jaxb
     source jaxb.outputs.files
@@ -63,7 +63,17 @@ jar.dependsOn(copyToLib)
 jar {
     manifest {
         attributes 'Implementation-Title': project.name,
-                   'Main-Class': 'org.pcj.blast.Main',
-                   'Class-Path': configurations.runtime.files.collect { "libs/$it.name" }.join(' ')
+                'Main-Class': project.ext.mainClass,
+                'Class-Path': configurations.runtime.files.collect { "libs/$it.name" }.join(' ')
     }
+}
+
+task makeFatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': project.name,
+                'Main-Class': project.ext.mainClass
+    }
+    baseName = project.name + '-fatjar'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
 }
