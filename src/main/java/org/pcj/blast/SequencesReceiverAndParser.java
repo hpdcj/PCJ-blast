@@ -88,7 +88,7 @@ public class SequencesReceiverAndParser {
     }
 
     private Writer openOutputWriter(String outputFile) throws IOException {
-        URI uri = new File(outputFile).toURI();
+        URI uri = URI.create(outputFile);
         if ("hdfs".equals(uri.getScheme())) {
             FileSystem fileSystem = getHadoopFileSystem();
             Path path = new org.apache.hadoop.fs.Path(uri.getPath());
