@@ -1,6 +1,8 @@
 # PCJ-blast
 
-PCJ-blast requires PCJ library. To obtain the library visit [PCJ Homepage](http://pcj.icm.edu.pl) or [its GitHub repository](https://github.com/hpdcj/PCJ).
+PCJ-blast is small peaco of software which allows to run sequence alignment in parallel in highly scalable manner. PCJ-blast reads input sequence and compares it with the reference database using NCBI-BLAST. Due to the dynamic load balancing PCJ-blast is couple of times faster than solutions based on the statid prtitioning of input data and reference database. Moreover PCJ-blast can be run efficiently without partotioning reference database which significantly simplifies installation and usage. The PCJ-blast allows to run analysis on different hardware, starting from workstation, thorugh Hadoop clusters up to large supercomputers with thousands of cores. The observed speedup is almost linear which can reduce analysis time from weeks to single hours. 
+
+PCJ-blast requires NCBI-BLAST installed and PCJ library. To obtain the library visit [PCJ Homepage](http://pcj.icm.edu.pl) or [GitHub repository](https://github.com/hpdcj/PCJ). The NCBI-BLAST can be obtained form [NCBI repository](ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/). 
 
 ## Usage
 
@@ -20,5 +22,5 @@ If BLAST `-outfmt` parameter is not set, the PCJ-blast will process it using its
 
 ## Reference
 The usage should be acknowledged by reference to the papers:
-* Nowicki, Marek, Davit Bzhalava, and Piotr Bała. "Massively Parallel Implementation of Sequence Alignment with Basic Local Alignment Search Tool Using Parallel Computing in Java Library." Journal of Computational Biology (2018).
-* Nowicki, Marek, Davit Bzhalava, and Piotr Bała. "Massively Parallel Sequence Alignment with BLAST Through Work Distribution Implemented using PCJ Library." International Conference on Algorithms and Architectures for Parallel Processing. Springer, Cham, 2017, p. 503-512.
+* Nowicki, Marek, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Implementation of Sequence Alignment with Basic Local Alignment Search Tool Using Parallel Computing in Java Library."](https://www.liebertpub.com/doi/10.1089/cmb.2018.0079) Journal of Computational Biology (2018).
+* Nowicki, Marek, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Sequence Alignment with BLAST Through Work Distribution Implemented using PCJ Library."](https://link.springer.com/chapter/10.1007/978-3-319-65482-9_36) International Conference on Algorithms and Architectures for Parallel Processing. Springer, Cham, 2017, p. 503-512.
