@@ -12,7 +12,7 @@ There are some parameters for PCJ-blast that can be used as JVM parameters (`-D<
 * `output=<path>` - path to output directory. Default: _._
 * `blast=<path>` - path to BLAST executable file. Default: _blastn_
 * `blastDb=<path>` - path to BLAST database file. Default: _nt_. Can be overriden by BLAST _-db_ parameter
-* `hdfsConf=<path>[:<path>...]` - paths (separated by path separator character, i.e. colon (_:_) for Linux). Default: _none_
+* `hdfsConf=<path>[:<path>...]` - paths for HDFS configurations (separated by path separator character, i.e. colon (_:_) for Linux). Default: _none_
 * `sequenceCount=<int>` - number of sequences in one block to submit to _processors_. Default: _1_
 * `blastThreads=<int>` - number of BLAST threads. Default: _1_. Can be overriden by BLAST _-num_threads_ parameter
 
