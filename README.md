@@ -22,5 +22,5 @@ If BLAST `-outfmt` parameter is not set, the PCJ-blast will process it using its
 
 ## Reference
 The usage should be acknowledged by reference to the papers:
-* Nowicki, Marek, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Implementation of Sequence Alignment with Basic Local Alignment Search Tool Using Parallel Computing in Java Library."](https://www.liebertpub.com/doi/10.1089/cmb.2018.0079) Journal of Computational Biology (2018).
-* Nowicki, Marek, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Sequence Alignment with BLAST Through Work Distribution Implemented using PCJ Library."](https://link.springer.com/chapter/10.1007/978-3-319-65482-9_36) International Conference on Algorithms and Architectures for Parallel Processing. Springer, Cham, 2017, p. 503-512.
+* Marek Nowicki, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Implementation of Sequence Alignment with Basic Local Alignment Search Tool Using Parallel Computing in Java Library."](https://www.liebertpub.com/doi/10.1089/cmb.2018.0079) Journal of Computational Biology (2018).
+* Marek Nowicki, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Sequence Alignment with BLAST Through Work Distribution Implemented using PCJ Library."](https://link.springer.com/chapter/10.1007/978-3-319-65482-9_36) International Conference on Algorithms and Architectures for Parallel Processing. Springer, Cham, 2017, p. 503-512.
