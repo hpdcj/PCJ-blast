@@ -20,6 +20,16 @@ There are some parameters for PCJ-blast that can be used as JVM parameters (`-D<
 
 If BLAST `-outfmt` parameter is not set, the PCJ-blast will process it using its _output processor_.
 
+## Compilation
+To compile PCJ-blast the _Gradle Build Tool_ is required. It will download all necessary dependencies.
+The _gradle wrapper_ is available as `gradlew` (or `gradlew.bat` for Microsoft Windows systems) executable file. 
+
+### Create _jar_ 
+To compile and build jar file with _PCJ-blast_ just execute `./gradlew build` command - the output will be stored in _build/dist_ package as `PCJ-blast.jar` file and all dependencies in _build/dist/libs_ directory; 
+
+### Create _fat_ jar 
+To create _fat jar_ with _PCJ-blast_ and all its dependencies as one file just execute `./gradlew makeFatJar` command - the output will be stored in _build/dist_ as `PCJ-blast-fatjar.jar` file.
+
 ## Reference
 The usage should be acknowledged by reference to the papers:
 * Marek Nowicki, Davit Bzhalava, and Piotr Bała. ["Massively Parallel Implementation of Sequence Alignment with Basic Local Alignment Search Tool Using Parallel Computing in Java Library."](https://www.liebertpub.com/doi/10.1089/cmb.2018.0079) Journal of Computational Biology (2018).
