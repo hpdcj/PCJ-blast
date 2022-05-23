@@ -53,8 +53,8 @@ tasks.withType(Jar) {
 }
 
 task copyToLib(type: Copy) {
-    into "${buildDir}/dist/libs"
-    from configurations.runtime
+    into file("${buildDir}/dist/libs")
+    from configurations.runtimeClasspath
 }
 
 jar.dependsOn(copyToLib)
@@ -73,6 +73,6 @@ task makeFatJar(type: Jar) {
                 'Main-Class': project.ext.mainClass
     }
     baseName = project.name + '-fatjar'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
