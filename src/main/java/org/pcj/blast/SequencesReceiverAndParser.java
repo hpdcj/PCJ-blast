@@ -25,6 +25,7 @@
  */
 package org.pcj.blast;
 
+import javax.xml.bind.JAXBException;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -41,15 +42,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.bind.JAXBException;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.pcj.PCJ;
@@ -226,7 +224,7 @@ public class SequencesReceiverAndParser {
         Process process = blastProcessBuiler.start();
         LOGGER.log(Level.FINE, "{0}: BLAST started", PCJ.myId());
 
-        Thread outputParserThread = null;
+        Thread outputParserThread;
         if (hasOutputFormat) {
             outputParserThread = new Thread(
                     () -> {
@@ -262,9 +260,7 @@ public class SequencesReceiverAndParser {
 
         process.waitFor();
 
-        if (outputParserThread != null) {
-            outputParserThread.join();
-        }
+        outputParserThread.join();
 
         LOGGER.log(Level.INFO, "{0}: BLAST execution time: {1}", new Object[]{PCJ.myId(), (System.nanoTime() - startTime) / 1e9});
     }

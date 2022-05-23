@@ -38,12 +38,14 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         File nodesFile = new File(Configuration.NODES_FILENAME);
-        if (nodesFile.isFile() == false) {
+        if (!nodesFile.isFile()) {
             System.err.println("Nodes description file does not exists: " + Configuration.NODES_FILENAME);
             System.exit(1);
         }
 
         BlastRunner.args = args;
-        PCJ.start(BlastRunner.class, new NodesDescription(nodesFile));
+        PCJ.executionBuilder(BlastRunner.class)
+                .addNodes(nodesFile)
+                .start();
     }
 }

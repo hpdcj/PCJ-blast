@@ -10,8 +10,8 @@ repositories {
 }
 
 dependencies {
-    implementation 'pl.edu.icm.pcj:pcj:5.0.6'
-    annotationProcessor 'pl.edu.icm.pcj:pcj:5.0.6'
+    implementation 'pl.edu.icm.pcj:pcj:5.3.0'
+    annotationProcessor 'pl.edu.icm.pcj:pcj:5.3.0'
 
     implementation "jakarta.xml.bind:jakarta.xml.bind-api:2.3.2"
     implementation "org.glassfish.jaxb:jaxb-runtime:2.3.2"

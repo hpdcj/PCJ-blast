@@ -53,7 +53,7 @@ public class XmlSplitter {
 
             @Override
             public int read(char[] cbuf, int off, int _len) throws IOException {
-                if (fileEnded == true) {
+                if (fileEnded) {
                     return -1;
                 }
 

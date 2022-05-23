@@ -102,7 +102,7 @@ public class InputFileReader {
                         }
                     }
                 }
-                if (line.isEmpty() == false) {
+                if (!line.isEmpty()) {
                     sb.append(line).append(System.lineSeparator());
                 }
             }
